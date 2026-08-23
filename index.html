@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gerador de Memorial Descritivo · BeGreen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <img src="assets/begreen-logo-white.png" alt="BeGreen" />
+  <div class="titulo">Gerador de Memorial Descritivo</div>
+  <div class="sep"></div>
+  <div class="busca-wrap"><input type="search" id="busca-projetos" placeholder="Buscar projeto: cliente, nº do documento ou endereço" autocomplete="off" /><span class="busca-atual" id="projeto-atual"></span></div>
+  <div class="menu-wrap"><button class="btn" id="btn-novo">Novo ▾</button><div id="painel-novo" class="menu" style="display:none"></div></div>
+  <button class="btn" id="btn-metricas" title="Memoriais por semana e por gestor">Métricas</button>
+  <button class="btn" id="btn-duplicar" title="Cria uma cópia deste projeto com os mesmos parâmetros, só trocando o cliente">Duplicar</button>
+  <button class="btn" id="btn-baixar">Baixar HTML</button>
+  <button class="btn primario" id="btn-pdf">Gerar PDF</button>
+</div>
+<div id="painel-projetos" style="display:none">
+  <div id="lista-projetos"></div>
+</div>
+<div id="status"><span id="status-texto"></span><span class="status-dir"><span id="nuvem" class="nuvem" title="Armazenamento compartilhado (Supabase)">● nuvem</span><button type="button" class="link" id="gestor-atual" title="Trocar o gestor de projeto">Definir gestor</button></span></div>
+<div id="modal" class="modal" style="display:none"><div class="modal-caixa"><div class="modal-cab"><span id="modal-titulo"></span><button type="button" class="btn-mini" id="modal-fechar">fechar</button></div><div id="modal-corpo"></div></div></div>
+
+<div class="main" id="main">
+  <div class="painel-form" id="painel-form">
+    <button type="button" class="btn-recolher" id="btn-recolher" title="Recolher parâmetros">‹ Recolher parâmetros</button>
+    <button type="button" class="btn-expandir" id="btn-expandir" title="Mostrar parâmetros"><span class="btn-expandir-seta">›</span><span class="btn-expandir-texto">Parâmetros</span></button>
+    <div id="fluxo" class="fluxo rascunho"></div>
+    <div id="pendencias" class="ok"></div>
+    <div id="form"></div>
+    <datalist id="lista-clientes"></datalist>
+  </div>
+  <div class="painel-preview">
+    <div id="preview"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/diagram.js"></script>
+<script src="js/template.js"></script>
+<script src="js/paginar.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

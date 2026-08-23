@@ -1,0 +1,12 @@
+{
+  "name": "gmd-gerador-memorial",
+  "version": "1.0.0",
+  "description": "Gerador de Memorial Descritivo · BeGreen Mobilidade Elétrica",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

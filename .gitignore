@@ -1,0 +1,19 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores e ferramentas locais
+.vscode/
+.idea/
+.claude/
+*.log
+
+# Node (não há dependências, mas por segurança)
+node_modules/
+
+# Vercel (configuração local do CLI)
+.vercel/
+
+# Variáveis locais, se um dia existirem
+.env
+.env.*

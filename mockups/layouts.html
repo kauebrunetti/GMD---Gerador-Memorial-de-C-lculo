@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seis layouts · Memorial Descritivo BeGreen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#1B1C1B; --tx1:#2E302D; --tx2:#3A3C39; --g1:#6E736D; --g2:#8A8B83; --ln1:#D8DAD4; --ln2:#E4E6E1; --bg1:#F2F3F0; --bg2:#F7F8F5; --green:#3AAA35; --gd:#2E8C2A; --gl:#8CD07F; --resumo:#EEF6ED; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8e9e4; font-family: Montserrat, sans-serif; color: var(--tx1); }
+  .topo { background: var(--ink); color: #fff; padding: 14px 28px; font-family: Oswald, sans-serif; letter-spacing: .16em; text-transform: uppercase; font-size: 12px; position: sticky; top: 0; z-index: 5; display: flex; gap: 18px; align-items: center; }
+  .topo a { color: var(--gl); text-decoration: none; font-size: 11px; }
+  .opcao { padding: 34px 28px 10px; }
+  .opcao h2 { font-family: Oswald, sans-serif; font-weight: 600; text-transform: uppercase; font-size: 22px; margin: 0 0 4px; color: var(--ink); }
+  .opcao p.desc { margin: 0 0 16px; font-size: 13px; color: var(--g1); max-width: 900px; }
+  .paginas { display: flex; gap: 22px; flex-wrap: wrap; }
+  /* página A4 em escala 0,62 (210×297 mm → 496×702 px) */
+  .pg { width: 496px; height: 702px; background: #fff; box-shadow: 0 2px 10px rgba(27,28,27,.16); position: relative; overflow: hidden; padding: 28px 42px; font-size: 8.2px; line-height: 1.7; color: var(--tx1); }
+  .pg .hd { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--ln1); padding-bottom: 4px; margin-bottom: 14px; font-family: Oswald, sans-serif; font-size: 6px; letter-spacing: .14em; text-transform: uppercase; color: var(--g2); }
+  .pg .hd img { height: 11px; }
+  .pg .ft { position: absolute; left: 42px; right: 42px; bottom: 24px; display: flex; justify-content: space-between; border-top: 1px solid var(--ln1); padding-top: 4px; font-size: 5.6px; letter-spacing: .06em; color: var(--g2); }
+  .pg .ft .dot { width: 4px; height: 4px; background: var(--green); display: inline-block; margin-right: 4px; border-radius: 1px; }
+  .sec { display: flex; align-items: baseline; gap: 10px; border-top: 2px solid var(--ink); padding-top: 7px; margin-bottom: 10px; }
+  .sec .n { font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px; line-height: 1; color: var(--green); }
+  .sec h3 { font-family: Oswald, sans-serif; font-weight: 600; font-size: 16px; text-transform: uppercase; margin: 0; color: var(--ink); }
+  .kick { font-family: Oswald, sans-serif; font-size: 6.2px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; color: var(--gd); }
+  .resumo { display: flex; gap: 9px; background: var(--resumo); border-left: 3px solid var(--green); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+  .resumo p { margin: 0; font-size: 7.4px; }
+  h4 { font-family: Oswald, sans-serif; font-weight: 500; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; margin: 10px 0 7px; padding-bottom: 4px; border-bottom: 1px solid var(--ln1); color: var(--ink); }
+  .mono { background: var(--bg1); border-radius: 6px; padding: 9px 12px; margin-bottom: 9px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 7px; margin-bottom: 10px; }
+  th { text-align: left; padding: 5px 6px; font-family: Oswald, sans-serif; font-weight: 500; font-size: 6.2px; letter-spacing: .12em; text-transform: uppercase; background: var(--ink); color: #fff; }
+  td { padding: 5px 6px; border-bottom: 1px solid var(--ln2); }
+  tr:nth-child(even) td { background: var(--bg2); }
+  .concl { border-top: 2px solid var(--green); background: var(--bg2); border-radius: 6px; padding: 8px 10px; }
+  .concl p { margin: 3px 0 0; font-size: 7.6px; font-weight: 500; color: var(--ink); }
+  /* capa base */
+  .capa { display: flex; flex-direction: column; }
+  .capa img { height: 24px; align-self: flex-start; }
+  .capa .kicker { font-family: Oswald, sans-serif; font-size: 8px; letter-spacing: .28em; text-transform: uppercase; color: var(--green); font-weight: 500; margin-top: 110px; }
+  .capa h1 { font-family: Oswald, sans-serif; font-weight: 600; font-size: 34px; line-height: 1.02; text-transform: uppercase; color: var(--ink); margin: 7px 0 0; }
+  .capa .bar { width: 46px; height: 3px; background: var(--green); margin: 13px 0 11px; }
+  .capa .sub { font-size: 9.5px; line-height: 1.5; color: #4A4C48; max-width: 300px; }
+  .capa .meta { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--ink); }
+  .capa .meta div { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--ln1); }
+  .capa .meta div:nth-child(even) { padding-left: 10px; border-left: 1px solid var(--ln1); }
+  .capa .meta .k { font-family: Oswald, sans-serif; font-size: 6px; letter-spacing: .16em; text-transform: uppercase; color: var(--g2); }
+  .capa .meta .v { font-size: 8.6px; font-weight: 600; color: var(--ink); margin-top: 2px; }
+  .capa .legal { margin-top: 9px; font-size: 5.8px; color: var(--g2); }
+
+  /* ── 1 · Editorial verde refinado */
+  .l1 .pg { padding: 30px 46px; }
+  .l1 th { background: transparent; color: var(--gd); border-bottom: 1.5px solid var(--green); }
+  .l1 tr:nth-child(even) td { background: transparent; }
+  .l1 td { border-bottom: 1px solid var(--ln2); padding: 6px 6px; }
+  .l1 .sec { border-top: 0; border-bottom: 1px solid var(--ln1); padding-bottom: 8px; }
+  .l1 .resumo { border-left-width: 2px; padding: 10px 12px; }
+  .l1 .capa .kicker { margin-top: 130px; }
+
+  /* ── 2 · Técnico minimalista */
+  .l2 .pg { font-weight: 300; padding: 30px 42px 30px 70px; }
+  .l2 .sec { border-top: 0; border-bottom: 1px solid var(--ink); position: relative; }
+  .l2 .sec .n { position: absolute; left: -30px; top: 2px; font-size: 13px; font-weight: 500; }
+  .l2 .sec h3 { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 13px; letter-spacing: .04em; }
+  .l2 .resumo { background: transparent; border-left: 1px solid var(--green); border-radius: 0; padding: 2px 10px; }
+  .l2 th { background: transparent; color: var(--ink); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .l2 tr:nth-child(even) td { background: transparent; }
+  .l2 .mono { background: transparent; border-top: 1px solid var(--ln1); border-bottom: 1px solid var(--ln1); border-radius: 0; }
+  .l2 .concl { background: transparent; border-top: 1px solid var(--green); border-radius: 0; padding: 8px 0; }
+  .l2 h4 { font-family: Montserrat, sans-serif; letter-spacing: .06em; font-weight: 600; border-bottom: 0; color: var(--g1); }
+  .l2 .capa { padding-left: 42px; }
+  .l2 .capa h1 { font-family: Montserrat, sans-serif; font-weight: 300; font-size: 30px; text-transform: none; letter-spacing: -.01em; }
+  .l2 .capa .kicker { color: var(--g2); letter-spacing: .2em; }
+  .l2 .capa .bar { height: 1px; width: 100%; margin: 18px 0 10px; }
+  .l2 .capa .meta { border-top: 0; grid-template-columns: 1fr; }
+  .l2 .capa .meta div { border: 0; padding: 3px 0; display: flex; gap: 10px; }
+  .l2 .capa .meta div:nth-child(even) { border: 0; padding-left: 0; }
+  .l2 .capa .meta .k { width: 90px; }
+  .l2 .capa .meta .v { margin: 0; font-weight: 400; }
+
+  /* ── 3 · Capa escura */
+  .l3 .pg.capa { background: var(--ink); color: #fff; }
+  .l3 .capa h1 { color: #fff; }
+  .l3 .capa .sub { color: #C9CAC4; }
+  .l3 .capa .kicker { color: var(--gl); }
+  .l3 .capa .meta { border-top-color: #3a3c39; }
+  .l3 .capa .meta div, .l3 .capa .meta div:nth-child(even) { border-color: #3a3c39; }
+  .l3 .capa .meta .v { color: #fff; }
+  .l3 .capa .legal { color: #8A8B83; }
+  .l3 .leaf { position: absolute; right: -40px; top: 120px; width: 300px; height: 300px; }
+  .l3 .pg.int { padding-top: 0; }
+  .l3 .pg.int .hd { background: var(--ink); margin: 0 -42px 14px; padding: 10px 42px 8px; border: 0; color: #8A8B83; }
+  .l3 .sec { background: var(--ink); color: #fff; border: 0; padding: 9px 12px; border-radius: 6px; margin: 0 0 12px; }
+  .l3 .sec h3 { color: #fff; }
+  .l3 .sec .n { color: var(--gl); }
+  .l3 .concl { background: var(--ink); color: #fff; border-top: 0; }
+  .l3 .concl .kick { color: var(--gl); }
+  .l3 .concl p { color: #fff; }
+
+  /* ── 4 · Faixa lateral */
+  .l4 .pg { padding-left: 70px; }
+  .l4 .faixa { position: absolute; left: 0; top: 0; bottom: 0; width: 30px; background: var(--bg1); }
+  .l4 .faixa .rot { position: absolute; top: 40px; left: 0; width: 30px; text-align: center; font-family: Oswald, sans-serif; font-weight: 600; font-size: 13px; color: var(--green); }
+  .l4 .faixa .vert { position: absolute; top: 70px; left: 9px; writing-mode: vertical-rl; transform: rotate(180deg); font-family: Oswald, sans-serif; font-size: 6px; letter-spacing: .2em; text-transform: uppercase; color: var(--g2); }
+  .l4 .pg.capa { padding-left: 70px; }
+  .l4 .pg.capa .faixa { background: var(--green); }
+  .l4 .pg.capa .faixa .rot { display: none; }
+  .l4 .pg.capa .faixa .vert { color: #fff; top: 40px; }
+  .l4 .ft { left: 70px; }
+  .l4 th { background: var(--green); }
+  .l4 tr:nth-child(even) td { background: var(--resumo); }
+  .l4 .sec { border-top: 0; border-bottom: 2px solid var(--green); }
+  .l4 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+  .l4 .cards div { background: var(--bg2); border-radius: 6px; padding: 7px 8px; }
+  .l4 .cards b { font-family: Oswald, sans-serif; font-size: 12px; font-weight: 500; display: block; }
+  .l4 .cards span { font-family: Oswald, sans-serif; font-size: 5.6px; letter-spacing: .12em; text-transform: uppercase; color: var(--green); }
+
+  /* ── 5 · Cartões para o cliente */
+  .l5 .pg { background: var(--bg2); padding: 26px 36px; }
+  .l5 .card { background: #fff; border-radius: 9px; padding: 10px 12px; margin-bottom: 9px; box-shadow: 0 1px 3px rgba(27,28,27,.06); }
+  .l5 .sec { border: 0; background: transparent; padding: 0; margin-bottom: 10px; }
+  .l5 .sec .n { background: var(--green); color: #fff; font-size: 11px; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+  .l5 .sec h3 { font-size: 14px; }
+  .l5 .resumo { background: var(--resumo); border-left: 0; border-radius: 9px; }
+  .l5 .ico { width: 14px; height: 14px; border-radius: 4px; background: var(--resumo); display: inline-block; vertical-align: middle; margin-right: 5px; position: relative; }
+  .l5 .ico::after { content: ''; position: absolute; left: 4px; top: 4px; width: 6px; height: 6px; border-radius: 2px; background: var(--green); }
+  .l5 th { background: var(--bg1); color: var(--ink); }
+  .l5 tr:nth-child(even) td { background: transparent; }
+  .l5 .concl { background: var(--ink); color: #fff; border: 0; border-radius: 9px; }
+  .l5 .concl .kick { color: var(--gl); }
+  .l5 .concl p { color: #fff; }
+  .l5 .mono { background: var(--bg2); }
+  .l5 .pg.capa { background: var(--bg2); }
+  .l5 .capa .bloco { background: #fff; border-radius: 12px; padding: 26px 24px; margin-top: 70px; }
+  .l5 .capa .kicker { margin-top: 0; }
+  .l5 .capa .meta { background: #fff; border-radius: 12px; padding: 10px 14px; border-top: 0; gap: 0 10px; }
+  .l5 .capa .meta div { border-bottom: 1px solid var(--ln2); }
+  .l5 .capa .meta div:nth-child(even) { border-left: 0; }
+  .l5 .capa .legal { padding: 0 4px; }
+
+  /* ── 6 · Relatório clássico */
+  .l6 .pg { font-size: 8.2px; }
+  .l6 .pg::before { content: ''; position: absolute; left: 42px; right: 42px; top: 18px; border-top: 1.5px solid var(--ink); border-bottom: .5px solid var(--ink); height: 2px; }
+  .l6 .pg::after { content: ''; position: absolute; left: 42px; right: 42px; bottom: 18px; border-top: .5px solid var(--ink); border-bottom: 1.5px solid var(--ink); height: 2px; }
+  .l6 .hd { border-bottom: 0; margin-top: 6px; font-family: 'Source Serif 4', serif; letter-spacing: .06em; text-transform: none; font-style: italic; font-size: 7px; color: var(--g1); }
+  .l6 .ft { border-top: 0; bottom: 28px; font-family: 'Source Serif 4', serif; font-style: italic; letter-spacing: 0; }
+  .l6 .sec { border-top: 0; border-bottom: 1px solid var(--ink); }
+  .l6 .sec .n { font-family: 'Source Serif 4', serif; color: var(--ink); font-size: 18px; }
+  .l6 .sec h3 { font-family: 'Source Serif 4', serif; text-transform: none; font-size: 17px; font-weight: 600; }
+  .l6 h4 { font-family: 'Source Serif 4', serif; text-transform: none; letter-spacing: 0; font-size: 10px; font-weight: 600; border-bottom: 0; }
+  .l6 .kick { font-family: 'Source Serif 4', serif; letter-spacing: .08em; font-style: italic; text-transform: none; font-size: 7.5px; color: var(--ink); }
+  .l6 .resumo { background: transparent; border: 1px solid var(--ink); border-left-width: 1px; border-radius: 0; }
+  .l6 th { background: transparent; color: var(--ink); border-top: 1.2px solid var(--ink); border-bottom: .6px solid var(--ink); font-family: 'Source Serif 4', serif; text-transform: none; letter-spacing: 0; font-size: 7.2px; font-weight: 600; }
+  .l6 tr:nth-child(even) td { background: transparent; }
+  .l6 td { border-bottom: .4px solid var(--ln1); }
+  .l6 tr:last-child td { border-bottom: 1.2px solid var(--ink); }
+  .l6 .mono { background: transparent; border-radius: 0; }
+  .l6 .concl { background: transparent; border: 1px solid var(--ink); border-top-width: 1px; border-radius: 0; }
+  .l6 .capa { text-align: center; align-items: center; }
+  .l6 .capa img { align-self: center; margin-top: 30px; }
+  .l6 .capa .kicker { font-family: 'Source Serif 4', serif; font-style: italic; letter-spacing: .1em; text-transform: none; color: var(--g1); margin-top: 120px; }
+  .l6 .capa h1 { font-family: 'Source Serif 4', serif; text-transform: none; font-size: 30px; font-weight: 700; }
+  .l6 .capa .bar { width: 30px; height: 1px; margin: 12px auto; }
+  .l6 .capa .sub { max-width: 320px; }
+  .l6 .capa .meta { grid-template-columns: 1fr; width: 100%; border-top: 1.2px solid var(--ink); border-bottom: 1.2px solid var(--ink); margin-bottom: 40px; }
+  .l6 .capa .meta div, .l6 .capa .meta div:nth-child(even) { border: 0; padding: 3px 0; display: flex; justify-content: space-between; text-align: left; }
+  .l6 .capa .meta .v { margin: 0; font-weight: 600; }
+  .l6 .capa .legal { display: none; }
+</style>
+</head>
+<body>
+<div class="topo">Seis layouts · Memorial Descritivo BeGreen
+  <a href="#l1">1 Editorial</a><a href="#l2">2 Minimalista</a><a href="#l3">3 Capa escura</a><a href="#l4">4 Faixa lateral</a><a href="#l5">5 Cartões</a><a href="#l6">6 Clássico</a>
+</div>
+
+<script>
+  // Conteúdo comum das páginas (capa e página interna), aplicado a cada layout
+  const LOGO = '../assets/begreen-logo-dark.png', LOGOW = '../assets/begreen-logo-white.png';
+  function capa(cls, logo) {
+    return `<div class="pg capa ${cls}">
+      <img src="${logo}" alt="BeGreen" />
+      ${cls === 'l5c' ? '<div class="bloco">' : ''}
+      <div class="kicker">Documento Técnico</div>
+      <h1>Memorial<br />Descritivo</h1>
+      <div class="bar"></div>
+      <p class="sub">Dimensionamento da infraestrutura elétrica para instalação de estação de recarga de veículos elétricos, em conformidade com a ABNT NBR 5410 e a ABNT NBR 17019.</p>
+      ${cls === 'l5c' ? '</div>' : ''}
+      <div class="meta">
+        <div><div class="k">Cliente / Contratante</div><div class="v">Condomínio Jardim das Acácias</div></div>
+        <div><div class="k">Nº do documento</div><div class="v">BG-ME-25-0812</div></div>
+        <div><div class="k">Endereço da obra</div><div class="v">Rua das Palmeiras, 245 · São Paulo/SP</div></div>
+        <div><div class="k">Revisão / Data</div><div class="v">Rev. 00 · 21/08/2026</div></div>
+        <div><div class="k">Responsável Técnico</div><div class="v">Eng. Kauê B. Angeli · CREA 5070656487</div></div>
+        <div><div class="k">Objeto</div><div class="v">Estação de recarga 14,8 kW · 2 ponto(s)</div></div>
+      </div>
+      <div class="legal">Documento de propriedade da BeGreen, emitido exclusivamente para o cliente identificado acima. Sua reprodução parcial, alteração ou uso para outra finalidade depende de autorização formal. Processos certificados ISO 9001.</div>
+    </div>`;
+  }
+  function interna(extra) {
+    extra = extra || {};
+    const card = (h) => extra.cards ? `<div class="card">${h}</div>` : h;
+    return `<div class="pg int">
+      ${extra.faixa ? '<div class="faixa"><div class="rot">05</div><div class="vert">Dimensionamento dos condutores</div></div>' : ''}
+      <div class="hd"><img src="${LOGO}" alt="" /><span>Memorial Descritivo · Infraestrutura de Recarga para Veículos Elétricos</span></div>
+      <div class="sec"><div class="n">05</div><h3>Dimensionamento dos condutores</h3></div>
+      ${card(`<div class="resumo"><div class="kick">Em resumo</div><p>O cabo foi escolhido para atender à corrente do carregador com margem de sobra: adotamos <strong>6 mm² de cobre</strong>, uma bitola acima do mínimo pela capacidade de condução. O fio terra tem a mesma bitola.</p></div>`)}
+      ${extra.cardsTop ? `<div class="cards"><div><b>14,8 kW</b><span>Potência total</span></div><div><b>2</b><span>Pontos de recarga</span></div><div><b>Tipo 2</b><span>Conector</span></div></div>` : ''}
+      ${card(`<h4>${extra.cards ? '<span class="ico"></span>' : ''}5.1 · Corrente de projeto</h4>
+      <p style="margin:0 0 7px">A corrente de projeto é obtida a partir da potência nominal da estação e da tensão de alimentação. Para a estação de 7,4 kW em 220 V bifásico (2F+T):</p>
+      <div class="mono">I<sub>b</sub> = P / V = 7.400 / 220 = <strong style="color:var(--gd)">33,6 A</strong></div>`)}
+      ${card(`<h4>${extra.cards ? '<span class="ico"></span>' : ''}5.6 · Conclusão do dimensionamento</h4>
+      <table><thead><tr><th>Trecho</th><th>Corrente</th><th>Cabo (HEPR 1 kV)</th><th>Eletroduto</th><th>L</th><th>ΔV</th><th>Situação</th></tr></thead>
+      <tbody>
+        <tr><td>Trecho 1 · QGBT – QDA</td><td>125 A</td><td>35mm(FN) + 16mm(T)</td><td>1.1/2"</td><td>12 m</td><td>0,87 %</td><td style="color:var(--gd);font-weight:600">Atende</td></tr>
+        <tr><td>Trecho 2 · QDA Transformador – Transformador</td><td>175 A</td><td>70mm(F) + 35mm(T)</td><td>2"</td><td>8 m</td><td>0,58 %</td><td style="color:var(--gd);font-weight:600">Atende</td></tr>
+        <tr><td>Trecho 3 · Transformador – QDA</td><td>22,5 A</td><td>2,5mm(FNT)</td><td>3/4"</td><td>6 m</td><td>0,55 %</td><td style="color:var(--gd);font-weight:600">Atende</td></tr>
+        <tr><td>Trecho 4 · QDA – Carregador (C-EV-01)</td><td>40 A</td><td>6mm(FT)</td><td>3/4"</td><td>26 m</td><td>2,97 %</td><td style="color:#C0392B;font-weight:600">Reavaliar</td></tr>
+      </tbody></table>`)}
+      ${card(`<div class="concl"><div class="kick">Conclusão</div><p>Os condutores de cada trecho, em cobre com isolação HEPR 1 kV, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.</p></div>`)}
+      <div class="ft"><span>BG-ME-25-0812 · Rev. 00 · 21/08/2026 · Página 7 de 18</span><span><span class="dot"></span>BeGreen · mybegreen.com.br</span></div>
+    </div>`;
+  }
+  const opcoes = [
+    ['l1', '1 · Editorial verde refinado', 'O layout atual com margens maiores, tabelas leves (sem cabeçalho preto), seções separadas por filete e quadros com mais respiro. É o de menor mudança para quem já conhece o documento.', {}],
+    ['l2', '2 · Técnico minimalista', 'Muito branco, Montserrat leve no corpo, número da seção na margem esquerda e filetes no lugar de caixas coloridas. Imprime bem em preto e branco; menos "vendedor" no resumo para o cliente.', {}],
+    ['l3', '3 · Capa escura', 'Capa preta com a folha da marca, faixa escura no cabeçalho das páginas e títulos de seção em bloco preto. Identidade forte, boa como peça comercial; pede impressão de qualidade.', { dark: true }],
+    ['l4', '4 · Faixa lateral', 'Uma faixa vertical em toda página com o número e o nome da seção, verde na capa e cinza nas internas. Tabelas com cabeçalho verde e zebra verde-clara; cards para os números principais. Facilita a navegação num memorial de 18 páginas.', { faixa: true, cardsTop: true }],
+    ['l5', '5 · Cartões para o cliente', 'Fundo cinza-claro e conteúdo em cartões brancos arredondados, com ícones ao lado dos subtítulos e parecer em cartão escuro. O mais amigável para síndico e cliente final; ocupa mais páginas.', { cards: true }],
+    ['l6', '6 · Relatório clássico', 'Filetes duplos no alto e no pé, títulos em serifa (Source Serif), capa centralizada e tabelas só com linhas pretas. Formalidade de laudo; dialoga menos com a identidade visual da BeGreen.', {}],
+  ];
+  for (const [cls, titulo, desc, extra] of opcoes) {
+    document.write(`<section class="opcao ${cls}" id="${cls}"><h2>${titulo}</h2><p class="desc">${desc}</p><div class="paginas">${capa(cls === 'l5' ? 'l5c' : '', extra.dark ? LOGOW : LOGO).replace('<div class="pg capa', extra.dark ? '<div class="pg capa"><svg class="leaf" viewBox="0 0 100 100"><path d="M20 80 C20 40 50 15 95 12 C92 55 65 85 20 80 Z" fill="#3AAA35"/><path d="M38 68 C45 45 68 28 95 12 C70 20 50 35 38 68 Z" fill="#C8D400" opacity=".9"/></svg><div class="_' : '<div class="pg capa')}${interna(extra)}</div></section>`);
+  }
+</script>
+</body>
+</html>
