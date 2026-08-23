@@ -935,25 +935,149 @@
     salvar(); renderTudo();
   });
 
-  // ── Gestor de projeto ─────────────────────────────────────
-  function definirGestor(forcar) {
-    let g = gestorAtual();
-    if (g && !forcar) return g;
-    const lista = gestores.length ? `\n\nJá cadastrados: ${gestores.join(', ')}` : '';
-    const r = prompt('Quem está usando o gerador? Informe o nome do gestor de projeto.' + lista, g);
-    if (r && r.trim()) {
-      g = r.trim();
-      try { localStorage.setItem(LS_GESTOR, g); } catch (e) { /* ignora */ }
-      if (!gestores.includes(g)) { gestores.push(g); gravarConfigCompartilhada('gestores', gestores); }
-    }
-    atualizarGestor();
-    return g;
-  }
+  // ── Gestor de projeto = usuário logado ────────────────────
+  let usuarioAtual = null; // { email, nome, papel }
+  function definirGestor() { return gestorAtual(); }
   function atualizarGestor() {
     const el = document.getElementById('gestor-atual');
-    if (el) el.textContent = gestorAtual() ? 'Gestor: ' + gestorAtual() : 'Definir gestor';
+    if (!el) return;
+    el.textContent = gestorAtual() ? `${gestorAtual()}${usuarioAtual && usuarioAtual.papel === 'admin' ? ' (admin)' : ''} · sair` : 'Entrar';
+    el.title = usuarioAtual ? usuarioAtual.email : '';
   }
-  document.getElementById('gestor-atual').addEventListener('click', () => definirGestor(true));
+  document.getElementById('gestor-atual').addEventListener('click', () => { if (usuarioAtual) sair(); else mostrarLogin('entrar'); });
+
+  // ── Login (Supabase Auth) ─────────────────────────────────
+  const $login = document.getElementById('login');
+  let modoLogin = 'entrar';
+  const FORMAS_LOGIN = {
+    entrar: { titulo: 'Entrar', email: true, senha: true, nome: false, botao: 'Entrar', auto: 'current-password' },
+    primeiro: { titulo: 'Primeiro acesso', email: true, senha: true, nome: true, botao: 'Criar minha senha', auto: 'new-password' },
+    esqueci: { titulo: 'Recuperar senha', email: true, senha: false, nome: false, botao: 'Enviar link por e-mail', auto: 'off' },
+    'nova-senha': { titulo: 'Nova senha', email: false, senha: true, nome: false, botao: 'Salvar nova senha', auto: 'new-password' },
+  };
+  function mostrarLogin(modo, msg, erro) {
+    modoLogin = FORMAS_LOGIN[modo] ? modo : 'entrar';
+    const f = FORMAS_LOGIN[modoLogin];
+    $login.style.display = 'flex';
+    document.body.classList.add('sem-sessao');
+    document.getElementById('login-titulo').textContent = f.titulo;
+    document.getElementById('login-email-wrap').style.display = f.email ? '' : 'none';
+    document.getElementById('login-senha-wrap').style.display = f.senha ? '' : 'none';
+    document.getElementById('login-nome-wrap').style.display = f.nome ? '' : 'none';
+    document.getElementById('login-senha').autocomplete = f.auto;
+    document.getElementById('login-senha').value = '';
+    document.getElementById('login-entrar').textContent = f.botao;
+    const m = document.getElementById('login-msg');
+    m.textContent = msg || '';
+    m.className = 'login-msg' + (erro ? ' erro' : '');
+    document.getElementById('login-primeiro').style.display = modoLogin === 'entrar' ? '' : 'none';
+    document.getElementById('login-esqueci').style.display = modoLogin === 'entrar' ? '' : 'none';
+    document.getElementById('login-voltar').style.display = modoLogin === 'entrar' || modoLogin === 'nova-senha' ? 'none' : '';
+    setTimeout(() => { const el = document.getElementById(f.email ? 'login-email' : 'login-senha'); if (el) el.focus(); }, 50);
+  }
+  function ocultarLogin() { $login.style.display = 'none'; document.body.classList.remove('sem-sessao'); }
+  document.getElementById('login-primeiro').addEventListener('click', () => mostrarLogin('primeiro', 'Seu e-mail precisa estar cadastrado pelo administrador. Informe-o e crie sua senha (mínimo 6 caracteres).'));
+  document.getElementById('login-esqueci').addEventListener('click', () => mostrarLogin('esqueci', 'Informe o e-mail cadastrado. Você receberá um link para definir uma nova senha.'));
+  document.getElementById('login-voltar').addEventListener('click', () => mostrarLogin('entrar'));
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const senha = document.getElementById('login-senha').value;
+    const nome = document.getElementById('login-nome').value.trim();
+    const btn = document.getElementById('login-entrar');
+    btn.disabled = true;
+    try {
+      if (modoLogin === 'entrar') {
+        if (!email || !senha) throw new Error('Informe e-mail e senha.');
+        await window.Auth.entrar(email, senha);
+        await aposLogin();
+      } else if (modoLogin === 'primeiro') {
+        if (!email || !senha) throw new Error('Informe e-mail e senha.');
+        if (!nome) throw new Error('Informe seu nome.');
+        const ok = await window.Sync.emailAutorizado(email);
+        if (!ok) throw new Error('Este e-mail não está na lista de autorizados. Peça ao administrador para cadastrá-lo em Novo ▾ → Equipe.');
+        const r = await window.Auth.criarConta(email, senha, nome);
+        if (r.precisaConfirmar) mostrarLogin('entrar', `Enviamos um e-mail de confirmação para ${email}. Abra o link que está nele e depois entre com sua senha.`);
+        else await aposLogin();
+      } else if (modoLogin === 'esqueci') {
+        if (!email) throw new Error('Informe o e-mail.');
+        await window.Auth.recuperarSenha(email);
+        mostrarLogin('entrar', `Se ${email} estiver cadastrado, você receberá um link para definir a nova senha.`);
+      } else if (modoLogin === 'nova-senha') {
+        if (!senha) throw new Error('Informe a nova senha.');
+        await window.Auth.definirSenha(senha);
+        await aposLogin();
+      }
+    } catch (err) {
+      mostrarLogin(modoLogin, err.message || String(err), true);
+    } finally { btn.disabled = false; }
+  });
+  async function aposLogin() {
+    let u = null;
+    try { u = await window.Sync.meuUsuario(); } catch (e) { u = null; }
+    if (!u) {
+      const email = window.Auth.email();
+      await window.Auth.sair();
+      mostrarLogin('entrar', `${email || 'Este e-mail'} não está autorizado a usar o gerador. Fale com o administrador.`, true);
+      return;
+    }
+    usuarioAtual = u;
+    try { localStorage.setItem(LS_GESTOR, u.nome); } catch (e) { /* ignora */ }
+    ocultarLogin();
+    atualizarGestor();
+    await carregarNuvem();
+  }
+  async function sair() {
+    if (!confirm('Sair do gerador? O cache deste navegador será limpo (os projetos continuam na nuvem).')) return;
+    await window.Auth.sair();
+    try { [LS_KEY, LS_GESTOR, LS_MODELOS].forEach(k => localStorage.removeItem(k)); } catch (e) { /* ignora */ }
+    location.reload();
+  }
+  window.addEventListener('gmd-sessao-expirada', () => { usuarioAtual = null; mostrarLogin('entrar', 'Sua sessão expirou. Entre novamente.'); });
+
+  // ── Equipe (admin): quem pode entrar ──────────────────────
+  async function abrirEquipe() {
+    abrirModal('Equipe · quem pode usar o gerador', '<p style="color:var(--g1)">Carregando…</p>');
+    let lista = [];
+    try { lista = await window.Sync.listarUsuarios(); } catch (e) { abrirModal('Equipe', `<p class="login-msg erro">Não foi possível carregar: ${esc(e.message)}</p>`); return; }
+    const linhas = lista.map(u => `<tr><td>${esc(u.email)}</td><td>${esc(u.nome)}</td><td>${u.papel === 'admin' ? 'Administrador' : 'Projetista'}</td><td>${u.ativo ? '<span style="color:var(--green-d);font-weight:600">ativo</span>' : '<span style="color:var(--g2)">inativo</span>'}</td><td style="white-space:nowrap"><button type="button" class="btn-mini" data-eq-toggle="${esc(u.email)}">${u.ativo ? 'desativar' : 'ativar'}</button> <button type="button" class="btn-mini" data-eq-papel="${esc(u.email)}" title="Alternar entre projetista e administrador">${u.papel === 'admin' ? 'tornar projetista' : 'tornar admin'}</button> ${u.email.toLowerCase() !== (usuarioAtual.email || '').toLowerCase() ? `<button type="button" class="btn-mini" data-eq-rm="${esc(u.email)}">×</button>` : ''}</td></tr>`).join('');
+    abrirModal('Equipe · quem pode usar o gerador', `
+      <p style="margin:0 0 10px;color:var(--g1)">Cadastre o e-mail de cada pessoa. Ela cria a própria senha em <strong>Primeiro acesso</strong> na tela de entrada. Desativar bloqueia o acesso na hora.</p>
+      <table class="tab"><thead><tr><th>E-mail</th><th>Nome</th><th>Papel</th><th>Situação</th><th></th></tr></thead><tbody>${linhas || '<tr><td colspan="5">Ninguém cadastrado.</td></tr>'}</tbody></table>
+      <div class="metr-titulo">Adicionar pessoa</div>
+      <div style="display:grid;grid-template-columns:1.3fr 1fr auto auto;gap:8px;align-items:end">
+        <label class="campo"><span class="campo-label">E-mail</span><input type="email" id="eq-email" autocomplete="off" /></label>
+        <label class="campo"><span class="campo-label">Nome</span><input type="text" id="eq-nome" autocomplete="off" /></label>
+        <label class="campo"><span class="campo-label">Papel</span><select id="eq-papel"><option value="projetista">Projetista</option><option value="admin">Administrador</option></select></label>
+        <button type="button" class="btn primario" id="eq-add" style="padding:8px 14px">Adicionar</button>
+      </div>`);
+  }
+  document.getElementById('modal-corpo').addEventListener('click', async (e) => {
+    const t = e.target;
+    try {
+      if (t.id === 'eq-add') {
+        const email = document.getElementById('eq-email').value.trim().toLowerCase();
+        const nome = document.getElementById('eq-nome').value.trim();
+        const papel = document.getElementById('eq-papel').value;
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert('Informe um e-mail válido.'); return; }
+        if (!nome) { alert('Informe o nome.'); return; }
+        await window.Sync.salvarUsuario({ email, nome, papel, ativo: true });
+        abrirEquipe();
+      } else if (t.dataset.eqToggle) {
+        const lista = await window.Sync.listarUsuarios();
+        const u = lista.find(x => x.email === t.dataset.eqToggle);
+        if (u) { await window.Sync.salvarUsuario({ email: u.email, nome: u.nome, papel: u.papel, ativo: !u.ativo }); abrirEquipe(); }
+      } else if (t.dataset.eqPapel) {
+        const lista = await window.Sync.listarUsuarios();
+        const u = lista.find(x => x.email === t.dataset.eqPapel);
+        if (u) { await window.Sync.salvarUsuario({ email: u.email, nome: u.nome, papel: u.papel === 'admin' ? 'projetista' : 'admin', ativo: u.ativo }); abrirEquipe(); }
+      } else if (t.dataset.eqRm) {
+        if (!confirm(`Remover ${t.dataset.eqRm} da equipe? A pessoa perde o acesso na hora.`)) return;
+        await window.Sync.excluirUsuario(t.dataset.eqRm);
+        abrirEquipe();
+      }
+    } catch (err) { alert('Não foi possível salvar: ' + err.message); }
+  });
 
   // ── Modal genérico ────────────────────────────────────────
   const $modal = document.getElementById('modal');
@@ -1172,7 +1296,8 @@
       <div class="menu-titulo">Modelos do time</div>
       ${proprios.length ? proprios.map(item).join('') : '<div class="menu-vazio">Nenhum modelo do time ainda.</div>'}
       <div class="menu-item destaque" data-acao="salvar-modelo"><span class="nome">+ Salvar o projeto atual como modelo…</span></div>
-      <div class="menu-item" data-acao="catalogo"><span class="nome">Catálogo de equipamentos…</span></div>`;
+      <div class="menu-item" data-acao="catalogo"><span class="nome">Catálogo de equipamentos…</span></div>
+      ${usuarioAtual && usuarioAtual.papel === 'admin' ? '<div class="menu-item" data-acao="equipe"><span class="nome">Equipe (quem pode entrar)…</span></div>' : ''}`;
   }
   document.getElementById('btn-novo').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1198,6 +1323,8 @@
       registrarNovo(novoProjeto(), true, 'branco');
     } else if (item.dataset.acao === 'catalogo') {
       abrirCatalogo();
+    } else if (item.dataset.acao === 'equipe') {
+      abrirEquipe();
     } else if (item.dataset.acao === 'salvar-modelo') {
       const sugestao = `${projeto.carregadores.length} × ${projeto.carregadores[0].potencia || '?'} kW · ${projeto.tensao} V ${projeto.config}${projeto.transformador === 'sim' ? ' · com trafo' : ''}`;
       const nome = prompt('Nome do modelo (como vai aparecer no menu Novo):', sugestao);
@@ -1337,5 +1464,13 @@ ${corpo}
   atualizarProjetoAtual();
   atualizarGestor();
   setStatus('Pronto. Os dados são salvos automaticamente.');
-  carregarNuvem().then(() => { if (!gestorAtual()) definirGestor(true); });
+  (async function iniciarSessao() {
+    if (!window.Auth || !window.Auth.ativo) { carregarNuvem(); return; }
+    const tipo = window.Auth.tratarLink();
+    if (tipo === 'recovery') { mostrarLogin('nova-senha', 'Defina sua nova senha (mínimo 6 caracteres).'); return; }
+    if (tipo) await window.Auth.carregarUsuario();
+    const s = await window.Auth.garantirSessao();
+    if (!s) { mostrarLogin('entrar'); return; }
+    await aposLogin();
+  })();
 })();

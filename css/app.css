@@ -62,6 +62,21 @@ body {
 .link { background: none; border: none; color: var(--green-d); font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
 .link:hover { text-decoration: underline; }
 
+/* ── Login ───────────────────────────────────────────────── */
+.login { position: fixed; inset: 0; z-index: 80; background: #e8e9e4; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-caixa { width: min(380px, 100%); background: #fff; border-radius: 12px; padding: 28px 28px 22px; box-shadow: 0 10px 40px rgba(27, 28, 27, .18); }
+.login-caixa img { height: 26px; display: block; margin-bottom: 14px; }
+.login-app { font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--green-d); }
+.login-caixa h1 { font-family: Oswald, sans-serif; font-weight: 600; font-size: 24px; text-transform: uppercase; color: var(--ink); margin: 4px 0 14px; }
+.login-msg { font-size: 11.5px; line-height: 1.5; color: var(--g1); margin-bottom: 10px; min-height: 0; }
+.login-msg.erro { color: #8a2d26; background: #FBEEEB; border-left: 3px solid #C0392B; padding: 7px 10px; border-radius: 6px; }
+.login-msg:empty { display: none; }
+.login-btn { width: 100%; margin-top: 6px; padding: 10px 14px; }
+.login-btn:disabled { opacity: .6; cursor: wait; }
+.login-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: 11px; }
+.login-links .link { font-size: 11px; font-weight: 500; }
+body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter: blur(5px); pointer-events: none; user-select: none; }
+
 /* ── Modal genérico (catálogo, métricas) ───────────────────── */
 .modal { position: fixed; inset: 0; background: rgba(27, 28, 27, .45); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal-caixa { background: #fff; border-radius: 10px; width: min(900px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 12px 40px rgba(0, 0, 0, .3); }

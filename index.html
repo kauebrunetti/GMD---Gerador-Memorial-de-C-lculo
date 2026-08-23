@@ -26,6 +26,23 @@
   <div id="lista-projetos"></div>
 </div>
 <div id="status"><span id="status-texto"></span><span class="status-dir"><span id="nuvem" class="nuvem" title="Armazenamento compartilhado (Supabase)">● nuvem</span><button type="button" class="link" id="gestor-atual" title="Trocar o gestor de projeto">Definir gestor</button></span></div>
+<div id="login" class="login" style="display:none">
+  <form class="login-caixa" id="login-form" novalidate>
+    <img src="assets/begreen-logo-dark.png" alt="BeGreen" />
+    <div class="login-app">Gerador de Memorial Descritivo</div>
+    <h1 id="login-titulo">Entrar</h1>
+    <div id="login-msg" class="login-msg"></div>
+    <label class="campo" id="login-email-wrap"><span class="campo-label">E-mail</span><input type="email" id="login-email" autocomplete="username" /></label>
+    <label class="campo" id="login-nome-wrap" style="display:none"><span class="campo-label">Seu nome (como aparece no memorial)</span><input type="text" id="login-nome" autocomplete="name" /></label>
+    <label class="campo" id="login-senha-wrap"><span class="campo-label">Senha</span><input type="password" id="login-senha" autocomplete="current-password" /></label>
+    <button type="submit" class="btn primario login-btn" id="login-entrar">Entrar</button>
+    <div class="login-links" id="login-links">
+      <button type="button" class="link" id="login-primeiro">Primeiro acesso: criar senha</button>
+      <button type="button" class="link" id="login-esqueci">Esqueci a senha</button>
+      <button type="button" class="link" id="login-voltar">Voltar para entrar</button>
+    </div>
+  </form>
+</div>
 <div id="modal" class="modal" style="display:none"><div class="modal-caixa"><div class="modal-cab"><span id="modal-titulo"></span><button type="button" class="btn-mini" id="modal-fechar">fechar</button></div><div id="modal-corpo"></div></div></div>
 
 <div class="main" id="main">
@@ -43,6 +60,7 @@
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/calc.js"></script>
 <script src="js/diagram.js"></script>

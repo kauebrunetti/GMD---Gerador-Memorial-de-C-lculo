@@ -19,6 +19,7 @@ O engenheiro preenche os parâmetros da obra, vê o documento A4 montado ao vivo
 ├── css/app.css                # interface + páginas A4 + regras de impressão
 ├── js/
 │   ├── config.js              # URL e chave pública do Supabase
+│   ├── auth.js                # login com Supabase Auth (e-mail + senha, sessão, recuperação)
 │   ├── sync.js                # acesso REST ao Supabase (projetos, modelos, config, numeração, eventos)
 │   ├── calc.js                # dimensionamento (NBR 5410/17019): correntes, cabos, eletrodutos, proteções, ΔV
 │   ├── diagram.js             # diagrama unifilar em SVG
@@ -49,6 +50,10 @@ Sem conexão com o Supabase o app continua funcionando com o cache do navegador 
 
 O deploy é automático: todo `push` na branch `main` publica na Vercel. Passo a passo da primeira configuração em [docs/DEPLOY.md](docs/DEPLOY.md). Estrutura e políticas do banco em [docs/SUPABASE.md](docs/SUPABASE.md).
 
+## Acesso
+
+Entra quem tem e-mail cadastrado na **Equipe** (Novo ▾ → Equipe, só administradores). No primeiro acesso a pessoa cria a própria senha. Detalhes em [docs/SUPABASE.md](docs/SUPABASE.md).
+
 ## Fluxo de trabalho no dia a dia
 
 1. **Novo ▾** → projeto em branco, modelo oficial BeGreen ou modelo do time; ou **Duplicar** o projeto atual (mesmos parâmetros, novo cliente).
@@ -63,7 +68,7 @@ O deploy é automático: todo `push` na branch `main` publica na Vercel. Passo a
 - Código e textos em português; sem framework e sem etapa de build (o que está no repositório é o que a Vercel serve).
 - Regras de dimensionamento ficam só em `js/calc.js`; textos do documento só em `js/template.js`.
 - Alterações no banco entram como novo arquivo em `supabase/migrations/` (numerado) e são aplicadas no painel do Supabase.
-- A chave em `js/config.js` é a chave **pública** (publishable) do Supabase; ela só tem o acesso que as políticas do banco permitem. Nunca coloque a `service_role` no front-end.
+- A chave em `js/config.js` é a chave **pública** (publishable) do Supabase; sem login ela não acessa dado nenhum (políticas só para usuários autenticados e autorizados). Nunca coloque a `service_role` no front-end.
 
 ## Licença
 

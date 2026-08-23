@@ -29,14 +29,21 @@ O SQL completo está em [`supabase/migrations/0001_estrutura_inicial.sql`](../su
 - A chave `service_role` dá acesso total e **nunca** deve ir para o front-end nem para o repositório.
 - Para trocar a chave (rotação): painel → *Project Settings → API Keys*, gere uma nova publishable, atualize `js/config.js`, faça o push e desative a antiga.
 
-## Segurança atual e próximo passo (login)
+## Login (Supabase Auth)
 
-Hoje as políticas liberam as tabelas `memorial_*` para o papel `anon` (quem tiver a chave pública). Isso é aceitável para uma ferramenta interna com link não divulgado, mas o próximo passo previsto é o **Supabase Auth** (e-mail + senha):
+Desde a migração `0002_auth.sql` o acesso exige **e-mail + senha** e o e-mail precisa estar na tabela `memorial_usuarios` (lista de autorizados). As políticas (RLS) liberam as tabelas `memorial_*` só para usuários autenticados **e** presentes nessa lista; a chave pública sozinha não lê nem grava nada.
 
-1. Painel → *Authentication → Providers*: manter só *Email*, desativar *Allow new users to sign up* (contas criadas pelo administrador).
-2. Criar os usuários em *Authentication → Users → Add user* (ou por convite por e-mail).
-3. Trocar as políticas de `to anon` para `to authenticated` (nova migração `0002_auth.sql`).
-4. No app: tela de login, sessão lembrada, botão sair; o "gestor" passa a ser o usuário logado.
+- **Cadastrar alguém:** no app, Novo ▾ → **Equipe** (só administradores) → e-mail, nome e papel. A pessoa entra em **Primeiro acesso** na tela de entrada e cria a própria senha. Se o projeto exigir confirmação de e-mail (padrão do Supabase), ela recebe um link antes de conseguir entrar.
+- **Desativar/remover:** mesma tela; o bloqueio vale na hora.
+- **Papéis:** `admin` (gerencia a equipe) e `projetista`. O primeiro admin é `kba@mybegreen.com.br`.
+- **Gestor de projeto** nas métricas = nome cadastrado na equipe.
+- **Esqueci a senha:** link por e-mail; abre o app em modo "Nova senha".
+
+Configuração necessária no painel (uma vez), em *Authentication → URL Configuration*:
+- **Site URL:** `https://bg-gmd.vercel.app`
+- **Redirect URLs:** `https://bg-gmd.vercel.app/**` e `http://localhost:4620/**`
+
+Em *Authentication → Providers → Email* mantenha **Enable Email provider** ligado e *Allow new users to sign up* ligado: o cadastro é controlado pela lista de autorizados, não pela opção do painel. O envio de e-mails usa o SMTP padrão do Supabase (limite baixo, da ordem de poucos e-mails por hora); para uma equipe maior, configure SMTP próprio em *Authentication → SMTP Settings*.
 
 ## Backup
 
