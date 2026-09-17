@@ -94,7 +94,7 @@
     const endereco = ph(p.endereco, '[Rua, número, complemento — Cidade/UF]');
     const docNum = ph(p.docNum, 'BG-ME-XX-XXXX');
     const rev = p.revisao || '00';
-    const tensaoCfg = `${c.rede.tensao || 220} V · ${p.config || '2F+T'} · 60 Hz`;
+    const tensaoCfg = `${c.rede.tensao || 220} V · ${p.config || '2F+N+T'} · 60 Hz`;
     const semAterr = p.aterramentoExistente === 'nao';
     const aterr = semAterr ? 'TT (eletrodo de aterramento próprio, executado pela BeGreen)' : esc(p.aterramento || 'TN-S');
     const naoIndica = p.alterarPadrao !== 'sim';
@@ -683,7 +683,7 @@
   ${h3('7.1 · Disjuntor termomagnético')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">O disjuntor do circuito da estação é dimensionado a partir da potência do equipamento, da tensão de alimentação e de uma margem de segurança que cobre o regime contínuo de operação:</p>
   ${formula(calc71, `I<sub>n</sub> = corrente nominal do disjuntor · I<sub>b</sub> = corrente de projeto do trecho (P / V nos circuitos monofásicos e bifásicos; P / (V × √3) nos trifásicos) · margem de segurança = regime contínuo e elevação de temperatura`)}
-  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 12px">A curva C acomoda a corrente de energização dos equipamentos sem atuação indevida e mantém a coordenação com a capacidade de condução do condutor de cada trecho. O número de polos segue a ligação do trecho: monopolar (F+N+T), bipolar (2F+T) ou tripolar (3F+N+T).</p>
+  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 12px">A curva C acomoda a corrente de energização dos equipamentos sem atuação indevida e mantém a coordenação com a capacidade de condução do condutor de cada trecho. O número de polos segue a ligação do trecho: monopolar (F+N+T), bipolar (2F+T ou 2F+N+T) ou tripolar (3F+N+T).</p>
   ${conclusao(`Os disjuntores de cada trecho, com curva C e capacidade de interrupção compatível com a corrente de curto-circuito presumida, estão calculados e resumidos no item 7.2.`, 18)}
   ${h3('7.2 · Proteções por trecho')}
   <p style="font-size:10px;line-height:1.6;color:${G1};margin:0 0 10px">Dispositivos de proteção de cada trecho: disjuntor dedicado no QGBT, disjuntor térmico e DPS nos quadros instalados e, em cada circuito de estação de recarga, o disjuntor do circuito com o kit de proteção (IDR e DPS) quando aplicável.</p>

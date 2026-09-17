@@ -19,7 +19,7 @@
       atualizadoEm: new Date().toISOString(),
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
-      tensao: 220, config: '2F+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim',
+      tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim',
       infra: 'solo', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
@@ -35,8 +35,7 @@
 
   // Migra projetos salvos com esquemas antigos
   function migrar(p) {
-    // Configurações válidas: F+N+T · 2F+T · 3F+N+T, em 127, 220 ou 380 V
-    if (p.config === '2F+N+T') p.config = '2F+T';
+    // Configurações válidas: F+N+T · 2F+T · 2F+N+T · 3F+N+T, em 127, 220 ou 380 V
     if (p.config === '1F+N+T') p.config = 'F+N+T';
     if (Number(p.tensao) === 380 && p.config !== '3F+N+T') p.config = '3F+N+T';
     if (!p.infra) p.infra = 'solo';
@@ -449,7 +448,7 @@
     </div></details>
     <details data-sec="2"><summary>2 · Entrada de energia do cliente</summary><div class="sec-body">
       <div class="grid2">
-        ${campo('Tensão / configuração', `<select data-chave="par-rede">${[['127|F+N+T', '127 V · F+N+T'], ['127|2F+T', '127 V · 2F+T'], ['220|F+N+T', '220 V · F+N+T'], ['220|2F+T', '220 V · 2F+T'], ['220|3F+N+T', '220 V · 3F+N+T'], ['380|3F+N+T', '380 V · 3F+N+T']].map(([v, l]) => `<option value="${v}"${v === `${projeto.tensao}|${projeto.config}` ? ' selected' : ''}>${l}</option>`).join('')}</select>`)}
+        ${campo('Tensão / configuração', `<select data-chave="par-rede">${[['127|F+N+T', '127 V · F+N+T'], ['127|2F+T', '127 V · 2F+T'], ['127|2F+N+T', '127 V · 2F+N+T'], ['220|F+N+T', '220 V · F+N+T'], ['220|2F+T', '220 V · 2F+T'], ['220|2F+N+T', '220 V · 2F+N+T'], ['220|3F+N+T', '220 V · 3F+N+T'], ['380|3F+N+T', '380 V · 3F+N+T']].map(([v, l]) => `<option value="${v}"${v === `${projeto.tensao}|${projeto.config}` ? ' selected' : ''}>${l}</option>`).join('')}</select>`)}
         ${campo('Disjuntor geral do QGBT (A)', inp('disjuntorGeral', { type: 'number', step: '1' }))}
         ${campoAv('Curto-circuito presumido no quadro, Ik (kA)', inp('ikPresumida', { type: 'number', step: '0.1' }))}
         ${campoAv('Necessidade de transformador?', sel('transformador', [['nao', 'Não'], ['sim', 'Sim']]))}
@@ -1127,11 +1126,11 @@
   }
   async function criarModelosOficiais() {
     const lista = [
-      modeloOficial('Residencial · 1 × 7,4 kW · 220 V 2F+T · sem QDA', 1, { n: 1, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+T' } }),
-      modeloOficial('Condomínio · 2 × 7,4 kW · 220 V 2F+T · QDA', 2, { n: 2, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+T' } }),
-      modeloOficial('Condomínio · 4 × 7,4 kW · 220 V 2F+T · QDA · circuitos agrupados', 3, { n: 4, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+T', trecho4Modo: 'agrupado', trecho4Duto: 'eletrocalha' } }),
+      modeloOficial('Residencial · 1 × 7,4 kW · 220 V 2F+N+T · sem QDA', 1, { n: 1, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
+      modeloOficial('Condomínio · 2 × 7,4 kW · 220 V 2F+N+T · QDA', 2, { n: 2, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
+      modeloOficial('Condomínio · 4 × 7,4 kW · 220 V 2F+N+T · QDA · circuitos agrupados', 3, { n: 4, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', trecho4Modo: 'agrupado', trecho4Duto: 'eletrocalha' } }),
       modeloOficial('Condomínio · 2 × 22 kW · 380 V 3F+N+T · QDA', 4, { n: 2, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 380, config: '3F+N+T' } }),
-      modeloOficial('Empresa · 1 × 22 kW · 220 V com transformador 220/380 V', 5, { n: 1, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+T', transformador: 'sim', quadroDistribuicao: 'sim', qdQuantidade: '1', trafoPrimV: '220', trafoPrimLig: '2F+T', trafoSecV: '380', trafoSecLig: '3F+N+T', trafoIp: 'IP21' } }),
+      modeloOficial('Empresa · 1 × 22 kW · 220 V com transformador 220/380 V', 5, { n: 1, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', transformador: 'sim', quadroDistribuicao: 'sim', qdQuantidade: '1', trafoPrimV: '220', trafoPrimLig: '2F+T', trafoSecV: '380', trafoSecLig: '3F+N+T', trafoIp: 'IP21' } }),
       modeloOficial('Frota · 1 × 60 kW DC · 380 V 3F+N+T · QDA', 6, { n: 1, carregador: { potencia: '60', conector: 'CCS 2', infra: 'solo', modelo: 'Estação DC 60 kW · CCS 2' }, projeto: { tensao: 380, config: '3F+N+T', quadroDistribuicao: 'sim', qdQuantidade: '1' } }),
     ];
     for (const m of lista) {
