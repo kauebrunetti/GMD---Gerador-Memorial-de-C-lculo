@@ -279,12 +279,11 @@ textarea { resize: vertical; }
 .combo.aberto .combo-input { border-color: var(--green); }
 .combo.aberto .combo-btn { color: var(--green-d); transform: rotate(180deg); }
 .combo-lista {
-  position: absolute; left: auto; right: 0; top: calc(100% + 4px); z-index: 30;
-  width: 330px; max-width: calc(100vw - 40px);
-  max-height: 268px; overflow-y: auto; background: #fff;
+  position: fixed; z-index: 60; width: 330px;
+  overflow-y: auto; background: #fff;
   border: 1px solid var(--ln1); border-radius: 8px; box-shadow: 0 6px 20px rgba(27, 28, 27, .16);
+  overscroll-behavior: contain;
 }
-.combo.acima .combo-lista { top: auto; bottom: calc(100% + 4px); }
 .combo-grupo {
   font-family: Oswald, sans-serif; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--g2); padding: 8px 10px 4px; background: var(--bg2); position: sticky; top: 0;

@@ -394,14 +394,24 @@
     lista.hidden = false;
     wrap.classList.add('aberto');
     const btn = wrap.querySelector('.combo-btn'); if (btn) btn.setAttribute('aria-expanded', 'true');
-    // abre para cima só quando falta espaço abaixo e sobra acima
-    const painel = document.getElementById('painel-form');
-    const r = wrap.getBoundingClientRect();
-    const rp = painel.getBoundingClientRect();
-    const abaixo = rp.bottom - r.bottom;
-    const acima = r.top - rp.top;
-    wrap.classList.toggle('acima', abaixo < 190 && acima > abaixo);
+    comboPosicionar(wrap);
     comboPos = -1;
+  }
+  // A lista fica fixa na tela, ancorada ao campo: não é cortada pelo painel
+  function comboPosicionar(wrap) {
+    const campo = wrap.getBoundingClientRect();
+    const lista = wrap.querySelector('.combo-lista');
+    if (!lista) return;
+    const larg = Math.min(330, window.innerWidth - 24);
+    const abaixo = window.innerHeight - campo.bottom - 12;
+    const acima = campo.top - 12;
+    const paraCima = abaixo < 200 && acima > abaixo;
+    const altura = Math.max(140, Math.min(320, paraCima ? acima : abaixo));
+    lista.style.width = larg + 'px';
+    lista.style.maxHeight = altura + 'px';
+    lista.style.left = Math.max(12, Math.min(campo.right - larg, window.innerWidth - larg - 12)) + 'px';
+    if (paraCima) { lista.style.top = 'auto'; lista.style.bottom = (window.innerHeight - campo.top + 4) + 'px'; }
+    else { lista.style.bottom = 'auto'; lista.style.top = (campo.bottom + 4) + 'px'; }
   }
   function comboDestacar(delta) {
     const lista = $form.querySelector('.combo.aberto .combo-lista');
@@ -415,6 +425,7 @@
     const alvo = itens[comboPos];
     if (alvo) alvo.scrollIntoView({ block: 'nearest' });
   }
+  let comboIgnorarFoco = false;
   function comboAplicar(i, k) {
     const eq = catalogo[k];
     const cg = projeto.carregadores[i];
@@ -426,7 +437,12 @@
     comboFechar();
     salvar(); renderTudo();
     const el = $form.querySelector(`.combo[data-combo="${i}"] .combo-input`);
-    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    if (el) {
+      comboIgnorarFoco = true; // devolver o foco não pode reabrir a lista
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+      setTimeout(() => { comboIgnorarFoco = false; }, 0);
+    }
   }
 
   // Características da carga em texto corrido: marca, modelo, tensão, corrente, potência e FP
@@ -823,7 +839,10 @@
     if (!e.target.closest('.combo')) comboFechar();
   });
   $form.addEventListener('focusin', (e) => {
-    if (e.target.classList.contains('combo-input')) comboAbrir(e.target.closest('.combo').dataset.combo, '');
+    if (e.target.classList.contains('combo-input')) {
+      if (comboIgnorarFoco) return;
+      comboAbrir(e.target.closest('.combo').dataset.combo, '');
+    }
     else if (!e.target.closest('.combo')) comboFechar();
   });
   $form.addEventListener('keydown', (e) => {
@@ -843,6 +862,9 @@
     } else if (e.key === 'Tab') comboFechar();
   });
   document.addEventListener('mousedown', (e) => { if (!e.target.closest('.combo')) comboFechar(); });
+  const reposicionar = () => { const w = $form.querySelector('.combo.aberto'); if (w) comboPosicionar(w); };
+  document.getElementById('painel-form').addEventListener('scroll', reposicionar, { passive: true });
+  window.addEventListener('resize', reposicionar);
 
   $form.addEventListener('click', (e) => {
     if (e.target.id === 'add-ponto') {
