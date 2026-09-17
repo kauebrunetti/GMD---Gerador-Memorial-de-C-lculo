@@ -222,7 +222,7 @@
 
     // ── Entrada: rede → medidor → disjuntor geral
     s += label(entradaX - 4, 20, [val(calc.rede.tensao ? calc.rede.tensao + ' V' : null, '')], {});
-    s += label(entradaX - 4, 28, [{ t: (calc.rede.config || '2F+N+T') + ' · 60 Hz', c: GRAY }], { size: 5.6, weight: 400 });
+    s += label(entradaX - 4, 28, [{ t: (calc.rede.config || '2F+T') + ' · 60 Hz', c: GRAY }], { size: 5.6, weight: 400 });
     s += `<line x1="${entradaX}" y1="32" x2="${entradaX}" y2="42" ${LINE}/>`;
     const oy = 0;
     s += simMedidor(entradaX, 50 + oy);

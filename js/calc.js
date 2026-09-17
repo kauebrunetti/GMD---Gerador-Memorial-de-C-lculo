@@ -102,16 +102,23 @@ const CONECTORES = ['Tipo 1', 'Tipo 2', 'CCS 1', 'CCS 2', 'CHAdeMO', 'GBT'];
 
 // Ligação elétrica do carregador, derivada da potência e da rede disponível:
 // · ≥ 11 kW → trifásico (3F+N+T), √3 no cálculo
-// · 3,7 / 7,4 kW em rede 380 V (3F+N+T) → 220 V 1F+N+T, proteção MONOPOLAR
-// · 3,7 / 7,4 kW em rede 220 V (2F+N+T ou 3F+N+T) → 220 V 2F+T, proteção BIPOLAR
+// · rede com uma só fase (F+N+T) → monofásico na tensão da rede (127 ou 220 V)
+// · rede 380 V 3F+N+T → 220 V entre fase e neutro: 1F+N+T, proteção MONOPOLAR
+// · demais redes (2F+T ou 3F+N+T em 127/220 V) → 220 V entre fases: 2F+T, BIPOLAR
 // DPS por ligação: 1F+N+T → 2 · 2F+T → 2 · 3F+N+T → 4
 function ligacaoPonto(P, rede) {
   const tensaoRede = Number(rede.tensao) || 220;
+  const config = String(rede.config || '2F+T');
   if (P >= TRIFASICO_KW) {
     // ≥ 11 kW: alimentação sempre em 380 V 3F+N+T
     return { tri: true, V: 380, fases: 3, temN: true, carregados: 3, nv: 5, polos: 'tripolar', caboPrefixo: 4, rotulo: '380 V · 3F+N+T', dpsQtd: 4, dpsDesc: 'um por fase e um no neutro' };
   }
-  const mono = String(rede.config) === '3F+N+T' && tensaoRede === 380;
+  // Rede de uma fase: o carregador fica na própria tensão fase-neutro do local
+  if (config === 'F+N+T' && tensaoRede !== 380) {
+    return { tri: false, V: tensaoRede, fases: 1, temN: true, carregados: 2, nv: 3, polos: 'monopolar', caboPrefixo: 2, rotulo: `${tensaoRede} V · 1F+N+T`, dpsQtd: 2, dpsDesc: 'um na fase e um no neutro' };
+  }
+  // Rede 380 V 3F+N+T: 220 V entre fase e neutro
+  const mono = config === '3F+N+T' && tensaoRede === 380;
   return mono
     ? { tri: false, V: 220, fases: 1, temN: true, carregados: 2, nv: 3, polos: 'monopolar', caboPrefixo: 2, rotulo: '220 V · 1F+N+T', dpsQtd: 2, dpsDesc: 'um na fase e um no neutro' }
     : { tri: false, V: 220, fases: 2, temN: false, carregados: 2, nv: 3, polos: 'bipolar', caboPrefixo: 2, rotulo: '220 V · 2F+T', dpsQtd: 2, dpsDesc: 'um por fase' };
@@ -279,6 +286,7 @@ const LIG_TRECHO = {
   '3F+T':   { tri: true, fases: 3, temN: false, carregados: 3, nv: 4, caboPrefixo: 3 },
   '2F+T':   { tri: false, fases: 2, temN: false, carregados: 2, nv: 3, caboPrefixo: 2 },
   '1F+N+T': { tri: false, fases: 1, temN: true, carregados: 2, nv: 3, caboPrefixo: 2 },
+  'F+N+T':  { tri: false, fases: 1, temN: true, carregados: 2, nv: 3, caboPrefixo: 2 },
 };
 
 // Dimensiona um trecho de alimentação (cabo + eletroduto) pela corrente In
