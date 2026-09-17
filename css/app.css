@@ -306,10 +306,9 @@ details.mais::after {
 .etapa-pt.atual { background: var(--ink); }
 .etapas-rot {
   display: flex; justify-content: space-between; margin-top: 8px;
-  font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tx2);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  font-family: Oswald, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #000;
 }
-.etapas-pend { color: var(--tx2); }
+.etapas-pend { color: #000; }
 .etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; margin-top: auto; }
 .etapa-btn {
   flex: 1; font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500;
