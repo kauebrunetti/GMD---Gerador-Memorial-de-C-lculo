@@ -166,19 +166,21 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .menu-vazio { padding: 8px 12px; font-size: 11px; color: var(--g2); }
 
 /* ── Pendências antes de emitir ───────────────────────────── */
-#pendencias { margin-top: 10px; overflow: hidden; flex: none; }
-#pendencias.ok { display: none; }
+#pendencias { position: relative; flex: none; margin-left: 6px; }
 .pend-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; cursor: pointer;
-  font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
-  background: rgba(192, 57, 43, .10); color: #8a2d26;
+  display: flex; align-items: center; gap: 7px; padding: 5px 11px; cursor: pointer; border-radius: 999px;
+  font-family: Oswald, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
+  background: #4a1c18; color: #F1B2AA; border: 1px solid #7a2f29;
 }
-.pend-head::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #C0392B; box-shadow: 0 0 0 3px rgba(192, 57, 43, .18); flex: none; margin-right: 2px; }
-.pend-head > span:first-of-type, .pend-head > b { flex: 1; }
-#pendencias.ok .pend-head { background: rgba(58, 170, 53, .12); color: var(--green-d); cursor: default; }
-#pendencias.ok .pend-head::before { background: var(--green); box-shadow: 0 0 0 3px rgba(58, 170, 53, .2); }
-.pend-lista { padding: 4px 0; max-height: 150px; overflow-y: auto; scrollbar-width: none; }
-.pend-lista::-webkit-scrollbar { display: none; }
+.pend-head:hover { border-color: #C0392B; color: #fff; }
+.pend-head::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #E0554A; box-shadow: 0 0 0 3px rgba(224, 85, 74, .25); flex: none; }
+#pendencias.ok .pend-head { background: #1f4a1d; color: var(--green-l); border-color: var(--green-d); cursor: default; }
+#pendencias.ok .pend-head::before { background: var(--green); box-shadow: 0 0 0 3px rgba(58, 170, 53, .25); }
+.pend-lista {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 70; width: 380px; max-height: 60vh; overflow-y: auto;
+  background: #fff; border: 1px solid var(--ln1); border-radius: 12px; padding: 6px 0;
+  box-shadow: 0 12px 36px rgba(27, 28, 27, .22); color: var(--tx2);
+}
 .pend-item { display: flex; gap: 8px; padding: 5px 12px; font-size: 11px; color: var(--tx2); cursor: pointer; }
 .pend-item:hover { background: var(--bg2); color: var(--ink); }
 .pend-sec { font-family: Oswald, sans-serif; font-size: 9px; letter-spacing: .1em; color: var(--g2); min-width: 44px; padding-top: 2px; text-transform: uppercase; }
@@ -211,14 +213,6 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .main {
   display: grid; grid-template-columns: 440px 1fr;
   flex: 1; min-height: 0;
-  /* fundo do painel de parâmetros: manchas suaves atrás dos cards de vidro */
-  background:
-    radial-gradient(260px 220px at 8% 6%, rgba(58, 170, 53, .34), transparent 70%),
-    radial-gradient(240px 240px at 96% 34%, rgba(140, 208, 127, .40), transparent 70%),
-    radial-gradient(300px 260px at 20% 78%, rgba(46, 140, 42, .20), transparent 70%),
-    radial-gradient(220px 200px at 90% 96%, rgba(27, 28, 27, .14), transparent 70%),
-    linear-gradient(180deg, #F3F5F1, #E6E9E3);
-  background-repeat: no-repeat; background-size: 440px 100%;
 }
 .painel-form {
   /* card de cristal flutuante: altura do conteúdo (até caber na tela); só o corpo da etapa rola, sem barra visível */
@@ -493,9 +487,9 @@ textarea { resize: vertical; }
 .btn-recolher:hover { color: var(--green-d); }
 .btn-expandir { display: none; }
 
-.main.recolhido { grid-template-columns: 44px 1fr; background-size: 44px 100%; }
+.main.recolhido { grid-template-columns: 44px 1fr; }
 .main.recolhido .painel-form { padding: 0; margin: 0; overflow: hidden; border-radius: 0; background: transparent; border: 0; box-shadow: none; }
-.main.recolhido #form, .main.recolhido .btn-recolher, .main.recolhido #fluxo, .main.recolhido #pendencias { display: none; }
+.main.recolhido #form, .main.recolhido .btn-recolher { display: none; }
 .main.recolhido .btn-expandir {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   width: 44px; height: 100%; border: none; background: var(--bg2);

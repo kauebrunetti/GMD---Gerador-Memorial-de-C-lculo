@@ -1097,7 +1097,7 @@
 
   // ── Pendências antes de emitir ────────────────────────────
   const $pend = document.getElementById('pendencias');
-  let pendAberta = true;
+  let pendAberta = false;
   function listarPendencias() {
     const c = window.Calc.calcularProjeto(projeto);
     const L = [];
@@ -1179,7 +1179,9 @@
     const prox = $form.querySelector('[data-nav="prox"], [data-nav="fim"]');
     if (prox) { const b = secs.has(String(etapaAtual)); prox.classList.toggle('bloqueado', b); prox.title = b ? 'Complete esta etapa para avançar' : ''; }
   }
+  let cliqueNasPendencias = false; // o clique re-renderiza a lista; evita que o fechamento global a feche na hora
   if ($pend) $pend.addEventListener('click', (e) => {
+    cliqueNasPendencias = true;
     if (e.target.closest('.pend-head')) { pendAberta = !pendAberta; renderPendencias(); return; }
     const it = e.target.closest('.pend-item');
     if (!it) return;
@@ -1502,6 +1504,8 @@
       $painel.style.display = 'none';
     }
     if (!$painelNovo.contains(e.target) && $painelNovo.style.display !== 'none') $painelNovo.style.display = 'none';
+    if (cliqueNasPendencias) { cliqueNasPendencias = false; return; }
+    if (pendAberta && $pend) { pendAberta = false; renderPendencias(); }
   });
   $lista.addEventListener('click', async (e) => {
     const dup = e.target.closest('.proj-duplicar');
