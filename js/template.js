@@ -565,7 +565,7 @@
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px"><tbody>
     ${trKV('Potência da estação', phn(pt.P, 'kW'), '52%')}
     ${trKV('Tensão de alimentação', `${pt.V} V ${fasesTxt}`)}
-    ${trKV('Tipo de linha elétrica', pt.infra.linha)}
+    ${trKV('Método de referência', pt.infra.linha)}
     ${trKV('Condutor', `Cobre, isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '0,6/1 kV' : '450/750 V'}`)}
     <tr><td style="${KV};color:${G1}">Seção adotada</td><td style="${KV};font-weight:600;color:${GREEN_D}">${manual(phn(pt.secao, 'mm²'), pt.secaoManual)}</td></tr>
   </tbody></table>
