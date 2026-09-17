@@ -100,10 +100,13 @@
     }
     return s;
   }
+  // Nome do cabo do projeto, definido em gerar() e usado pelos rótulos
+  let nomeCabo = 'HEPR 1 kV';
+
   // Rótulo de um trecho de alimentação: cabo / eletroduto · comprimento
   function rotuloTrecho(tr, x, y, opts) {
     opts = opts || {};
-    const l1 = tr && tr.secao ? [{ t: tr.caboDesc + ' HEPR 1 kV', c: INK }] : [{ t: '[XX] mm² HEPR 1 kV', c: GRAY }];
+    const l1 = tr && tr.secao ? [{ t: tr.caboDesc + ' ' + nomeCabo, c: INK }] : [{ t: '[XX] mm² ' + nomeCabo, c: GRAY }];
     const l2 = [tr && tr.eletroduto ? { t: tr.eletroduto, c: INK } : { t: '[Ø]', c: GRAY }, { t: ' · ', c: GRAY }, tr && tr.L ? { t: fmt(tr.L) + ' m', c: INK } : { t: '[XX] m', c: GRAY }];
     return label(x, y, l1, Object.assign({ size: 5.9 }, opts)) + label(x, y + 8, l2, Object.assign({ size: 5.9, weight: 400 }, opts));
   }
@@ -142,8 +145,8 @@
     s += `<line x1="${x}" y1="${caboY1}" x2="${x}" y2="${caboY2}" ${LINE}/>`;
     s += marcasCabo(x, cm - 3, false, pt.lig.fases);
     const caboLbl = pt.secao
-      ? [{ t: pt.caboDesc + ' HEPR 1 kV', c: INK }]
-      : [{ t: '[XX] mm² HEPR 1 kV', c: GRAY }];
+      ? [{ t: pt.caboDesc + ' ' + nomeCabo, c: INK }]
+      : [{ t: '[XX] mm² ' + nomeCabo, c: GRAY }];
     s += label(x + 12, cm - 3, caboLbl, { size: 5.9 });
     const infra = [];
     infra.push(pt.eletroduto ? { t: pt.eletroduto, c: INK } : { t: '[Ø]', c: GRAY });
@@ -207,6 +210,7 @@
 
   // ── Diagrama completo ─────────────────────────────────────
   function gerar(calc, docNum) {
+    nomeCabo = (calc.cabo && calc.cabo.nome) || 'HEPR 1 kV';
     const pontos = calc.pontos;
     const n = Math.max(1, pontos.length);
     const multi = n > 1;

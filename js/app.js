@@ -20,7 +20,7 @@
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
       tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim',
-      infra: 'B1', quadroDistribuicao: 'nao', qdQuantidade: '',
+      infra: 'B1', classeCabo: '1kV', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
       trafoPrimV: '', trafoPrimLig: '', trafoSecV: '', trafoSecLig: '', trafoIp: '',
@@ -42,6 +42,7 @@
     const METODO_ANTIGO = { solo: 'D', alvenaria: 'B1', aparente: 'B1' };
     if (METODO_ANTIGO[p.infra]) p.infra = METODO_ANTIGO[p.infra];
     if (!p.infra) p.infra = 'B1';
+    if (!window.Calc.CABOS[p.classeCabo]) p.classeCabo = '1kV';
     (p.carregadores || []).forEach(cg => { if (METODO_ANTIGO[cg.infra]) cg.infra = METODO_ANTIGO[cg.infra]; });
     ['t1', 't2', 't3'].forEach(k => { const tr = (p.trechos || {})[k]; if (tr && METODO_ANTIGO[tr.infra]) tr.infra = METODO_ANTIGO[tr.infra]; });
     if (!p.quadroDistribuicao) p.quadroDistribuicao = p.topologia === 'quadro' ? 'sim' : 'nao';
@@ -485,7 +486,7 @@
           ${campoAv('Seção do cabo (mm²)', inp(chaveS, { type: 'number', step: '0.5' }))}
           ${chaveE ? campoAv('Eletroduto', sel(chaveE, opcoesEletroduto)) : ''}
         </div>
-        ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} HEPR 1 kV · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
+        ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} ${c.cabo.nome} · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
         ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; 2 %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
       </div>`;
 
@@ -537,7 +538,7 @@
             ${campoAv('Seção do cabo (mm²)', inp(`carregadores.${i}.secaoManual`, { type: 'number', step: '0.5' }))}
             ${agrupado ? '' : campoAv('Eletroduto', sel(`carregadores.${i}.eletrodutoManual`, opcoesEletroduto))}
           </div>
-          ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} HEPR 1 kV · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
+          ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} ${c.cabo.nome} · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
           ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; 2 %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
         </div>`; }).join('')}
       </div>`,
@@ -601,6 +602,7 @@
       ${campo('Conexão das estações', sel('internetCliente', [['sim', 'Ponto de internet do cliente (Wi-Fi ou cabo)'], ['nao', 'Não se aplica (4G próprio ou sem conexão)']]))}
     </div></details>
     <details data-sec="6"><summary>6 · Trechos e dimensionamento</summary><div class="sec-body">
+      ${campo('Classe do cabo', sel('classeCabo', Object.values(window.Calc.CABOS).map(cb => [cb.chave, cb.chave === '1kV' ? 'HEPR 1 kV · dupla isolação (padrão BeGreen)' : 'PVC 750 V · isolação simples'])))}
       ${trechosHtml}
     </div></details>
     <details data-sec="7"${projeto.analiseDemanda === 'sim' ? '' : ''}><summary>7 · Análise de demanda</summary><div class="sec-body">

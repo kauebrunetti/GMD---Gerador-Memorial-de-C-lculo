@@ -73,14 +73,89 @@ const CAPACIDADE = {
     240: [781, 719],
   },
 };
+// Capacidade de condução para cabo de 750 V (isolação PVC, 70 °C) —
+// tabelas 36 (A1 a D) e 38 (E, F e G) da NBR 5410, cobre.
+const CAPACIDADE_750 = {
+  A1: {
+    1.5: [15.5, 14], 2.5: [21, 18.5], 4: [28, 25], 6: [36, 32],
+    10: [50, 44], 16: [68, 59], 25: [89, 77], 35: [110, 96],
+    50: [134, 117], 70: [171, 149], 95: [207, 180], 120: [239, 208],
+    150: [275, 239], 185: [314, 272], 240: [370, 320],
+  },
+  A2: {
+    1.5: [15, 13.5], 2.5: [20, 18], 4: [27, 24], 6: [34, 31],
+    10: [46, 42], 16: [62, 56], 25: [80, 73], 35: [99, 89],
+    50: [118, 108], 70: [149, 136], 95: [179, 164], 120: [206, 188],
+    150: [236, 216], 185: [268, 245], 240: [315, 286],
+  },
+  B1: {
+    1.5: [17.5, 15.5], 2.5: [24, 21], 4: [32, 28], 6: [41, 36],
+    10: [57, 50], 16: [76, 68], 25: [101, 89], 35: [125, 110],
+    50: [151, 134], 70: [192, 171], 95: [232, 207], 120: [269, 239],
+    150: [309, 275], 185: [353, 314], 240: [415, 370],
+  },
+  B2: {
+    1.5: [16.5, 15], 2.5: [23, 20], 4: [30, 27], 6: [38, 34],
+    10: [52, 46], 16: [69, 62], 25: [90, 80], 35: [111, 99],
+    50: [133, 118], 70: [168, 149], 95: [201, 179], 120: [232, 206],
+    150: [258, 230], 185: [294, 262], 240: [344, 307],
+  },
+  C: {
+    1.5: [19.5, 17.5], 2.5: [27, 24], 4: [36, 32], 6: [46, 41],
+    10: [63, 57], 16: [85, 76], 25: [112, 96], 35: [138, 119],
+    50: [168, 144], 70: [213, 184], 95: [258, 223], 120: [299, 259],
+    150: [344, 299], 185: [392, 341], 240: [461, 403],
+  },
+  D: {
+    1.5: [22, 18], 2.5: [29, 24], 4: [38, 31], 6: [47, 39],
+    10: [63, 52], 16: [81, 67], 25: [104, 86], 35: [125, 103],
+    50: [148, 122], 70: [183, 151], 95: [216, 179], 120: [246, 203],
+    150: [278, 230], 185: [312, 258], 240: [361, 297],
+  },
+  E: {
+    1.5: [22, 18.5], 2.5: [30, 25], 4: [40, 34], 6: [51, 43],
+    10: [70, 60], 16: [94, 80], 25: [119, 101], 35: [148, 126],
+    50: [180, 153], 70: [232, 196], 95: [282, 238], 120: [328, 276],
+    150: [379, 319], 185: [434, 364], 240: [514, 430],
+  },
+  F: {
+    25: [131, 114], 35: [162, 143], 50: [196, 174], 70: [251, 225],
+    95: [304, 275], 120: [352, 321], 150: [406, 372], 185: [463, 427],
+    240: [546, 507],
+  },
+  G: {
+    25: [146, 130], 35: [181, 162], 50: [219, 197], 70: [281, 254],
+    95: [341, 311], 120: [396, 362], 150: [456, 419], 185: [521, 480],
+    240: [615, 569],
+  },
+};
+
+// Classe de isolação do cabo escolhida no projeto
+const CABOS = {
+  '1kV': {
+    chave: '1kV', nome: 'HEPR 1 kV', desc: 'cobre, isolação HEPR 90 °C, classe 0,6/1 kV',
+    isolacao: 'HEPR', tempCondutor: 90, fatorTemp: 'epr',
+    capacidade: CAPACIDADE, tabelaBase: 37, tabelaAr: 39,
+  },
+  '750V': {
+    chave: '750V', nome: 'PVC 750 V', desc: 'cobre, isolação PVC 70 °C, classe 450/750 V',
+    isolacao: 'PVC', tempCondutor: 70, fatorTemp: 'pvc',
+    capacidade: CAPACIDADE_750, tabelaBase: 36, tabelaAr: 38,
+  },
+};
+const caboDe = (chave) => CABOS[chave] || CABOS['1kV'];
+
 const SECOES = Object.keys(CAPACIDADE.B1).map(Number).sort((a, b) => a - b);
 
 // Fator de correção de temperatura — NBR 5410, tabela 40 (EPR/XLPE).
 const FATOR_TEMP = {
-  // linha enterrada: temperatura do solo, referência 20 °C
+  // EPR/XLPE 90 °C (cabo de 1 kV) — linha enterrada, referência 20 °C
   solo: { 10: 1.07, 15: 1.04, 20: 1.00, 25: 0.96, 30: 0.93, 35: 0.89, 40: 0.85, 45: 0.80, 50: 0.76, 55: 0.71, 60: 0.65 },
-  // demais linhas: temperatura ambiente, referência 30 °C
+  // EPR/XLPE 90 °C — demais linhas, temperatura ambiente, referência 30 °C
   ar:   { 10: 1.15, 15: 1.12, 20: 1.08, 25: 1.04, 30: 1.00, 35: 0.96, 40: 0.91, 45: 0.87, 50: 0.82, 55: 0.76, 60: 0.71 },
+  // PVC 70 °C (cabo de 750 V) — enterrada e ao ar
+  solo_pvc: { 10: 1.10, 15: 1.05, 20: 1.00, 25: 0.95, 30: 0.89, 35: 0.84, 40: 0.77, 45: 0.71, 50: 0.63, 55: 0.55, 60: 0.45 },
+  ar_pvc:   { 10: 1.22, 15: 1.17, 20: 1.12, 25: 1.06, 30: 1.00, 35: 0.94, 40: 0.87, 45: 0.79, 50: 0.71, 55: 0.61, 60: 0.50 },
 };
 
 // Tipos de infraestrutura (parâmetro do projeto)
@@ -141,6 +216,13 @@ const INFRAS = {
     linha: 'G (cabos unipolares espaçados ao ar livre)',
     desc: 'cabos unipolares espaçados ao ar livre',
   },
+};
+
+// Diâmetro externo aproximado do condutor flexível PVC 450/750 V [mm] — catálogo do fabricante.
+const DIAMETRO_EXTERNO_750 = {
+  1.5: 3.1, 2.5: 3.6, 4: 4.2, 6: 4.8, 10: 6.2, 16: 7.4,
+  25: 9.2, 35: 10.4, 50: 12.3, 70: 14.2, 95: 16.5, 120: 18.4,
+  150: 20.6, 185: 23.0, 240: 26.2,
 };
 
 // Diâmetro externo aproximado do condutor HEPR 0,6/1 kV [mm] — catálogo do fabricante.
@@ -243,7 +325,8 @@ function descCabo(secao, lig) {
   return `${fmt(secao)}mm(${fn}) + ${fmt(st)}mm(T)`;
 }
 
-function fatorTemperatura(tempC, tabela) {
+function fatorTemperatura(tempC, tabela, cabo) {
+  if (cabo && cabo.fatorTemp === 'pvc') tabela = (tabela === 'solo' ? 'solo_pvc' : 'ar_pvc');
   const tab = FATOR_TEMP[tabela] || FATOR_TEMP.solo;
   if (!isFinite(tempC)) return 1.0;
   const chaves = Object.keys(tab).map(Number);
@@ -270,7 +353,8 @@ function comercialMaisProximo(lista, alvo, minimo) {
 }
 
 // Calcula um ponto de recarga completo.
-function calcularPonto(ponto, rede, infra, indice, fA) {
+function calcularPonto(ponto, rede, infra, indice, fA, cabo) {
+  cabo = caboDe(cabo && cabo.chave);
   fA = fA || 1;
   const P = Number(ponto.potencia) || 0;          // kW
   const lig = ligacaoPonto(P, rede);
@@ -298,10 +382,10 @@ function calcularPonto(ponto, rede, infra, indice, fA) {
   const idr = usaKit ? (num(ponto.idrManual) ?? idrCalc) : 0;
 
   // Fator de temperatura conforme o tipo de linha (solo × ambiente)
-  const fT = fatorTemperatura(temp, infra.fator);
+  const fT = fatorTemperatura(temp, infra.fator, cabo);
 
   // Seção mínima pela capacidade de condução: Iz·fT ≥ In (≥ Ib)
-  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.B1;
+  const tabelaCap = cabo.capacidade[infra.metodo] || cabo.capacidade.B1;
   let secaoCapacidade = 0;
   const alvo = Math.max(disjuntor, Ib);
   const idxCap = lig.carregados >= 3 ? 1 : 0;
@@ -336,7 +420,7 @@ function calcularPonto(ponto, rede, infra, indice, fA) {
   }
 
   // Ocupação do eletroduto: A = (π·De²/4)·NV ≤ 40 % da área interna
-  const de = DIAMETRO_EXTERNO[secao] || 0;
+  const de = (cabo.chave === '750V' ? DIAMETRO_EXTERNO_750[secao] : DIAMETRO_EXTERNO[secao]) || 0;
   const areaOcupada = de ? (3.14 * de * de / 4) * lig.nv : 0; // π = 3,14 como exibido
   let eletrodutoCalc = null;
   for (const e of ELETRODUTOS) {
@@ -391,12 +475,13 @@ const LIG_TRECHO = {
 };
 
 // Dimensiona um trecho de alimentação (cabo + eletroduto) pela corrente In
-function dimensionarTrecho(t, In, V, ligKey, infra, origemI) {
+function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo) {
   t = t || {};
+  cabo = caboDe(cabo && cabo.chave);
   const lig = LIG_TRECHO[ligKey] || LIG_TRECHO['3F+N+T'];
   const L = Number(t.L) || 0;
-  const fT = fatorTemperatura(infra.tempRef, infra.fator);
-  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.B1;
+  const fT = fatorTemperatura(infra.tempRef, infra.fator, cabo);
+  const tabelaCap = cabo.capacidade[infra.metodo] || cabo.capacidade.B1;
   const idx = lig.carregados >= 3 ? 1 : 0;
   let secaoCalc = 0;
   if (In > 0) {
@@ -410,7 +495,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI) {
   const secao = num(t.secao) ?? secaoCalc;
   const fq = lig.tri ? Math.sqrt(3) : 2;
   const quedaPct = (secao > 0 && V > 0 && In > 0 && L > 0) ? (fq * 0.0224 * L * In) / (secao * V) * 100 : 0;
-  const de = DIAMETRO_EXTERNO[secao] || 0;
+  const de = (cabo.chave === '750V' ? DIAMETRO_EXTERNO_750[secao] : DIAMETRO_EXTERNO[secao]) || 0;
   const areaOcupada = de ? (3.14 * de * de / 4) * lig.nv : 0;
   let eletrodutoCalc = '';
   for (const e of ELETRODUTOS) {
@@ -436,6 +521,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI) {
 function calcularProjeto(p) {
   const rede = { tensao: p.tensao, config: p.config, ikPresumida: p.ikPresumida };
   const infra = INFRAS[p.infra] || INFRAS.B1;
+  const cabo = caboDe(p.cabo1kv || p.classeCabo);
   // Forma de passagem: definida por trecho (padrão: infra do projeto)
   const infraDe = (obj) => (obj && INFRAS[obj.infra]) || infra;
   // Trecho 4 agrupado: todos os circuitos no mesmo eletroduto/eletrocalha →
@@ -444,7 +530,7 @@ function calcularProjeto(p) {
   const nCirc = (p.carregadores && p.carregadores.length) || 1;
   const fA = agrupado ? (AGRUPAMENTO[Math.min(nCirc, 9)] || 0.5) : 1;
   const pontos = (p.carregadores && p.carregadores.length ? p.carregadores : [{}])
-    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA));
+    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA, cabo));
   let trecho4 = null;
   if (agrupado) {
     const tipo = p.trecho4Duto === 'eletrocalha' ? 'eletrocalha' : 'eletroduto';
@@ -533,17 +619,17 @@ function calcularProjeto(p) {
   // distribuição; 4 quadro de distribuição → carregadores (= circuitos)
   const trechos = {};
   if (topologia === 'quadro') {
-    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total');
+    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total', cabo);
     if (trafo) {
       const primV = trafo.primV || Number(rede.tensao) || 220;
-      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1');
+      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1', cabo);
       const secLig = trafo.secLig || '3F+N+T';
       trechos.t3 = dimensionarTrecho(tp.t3, I3, secVTrafo, secLig, infraDe(tp.t3),
-        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'));
+        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'), cabo);
     }
   }
 
-  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
+  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, cabo, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
 }
 
 function num(v) {
@@ -562,5 +648,5 @@ function fmt(n, casas) {
 window.Calc = {
   calcularProjeto, calcularPonto, fmt, num, ligacaoPonto, descCabo, terraSecao,
   ELETRODUTOS, ELETROCALHAS, SECOES, DIAMETRO_EXTERNO, DPS_TENSAO, POTENCIAS, INFRAS,
-  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP,
+  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP, CABOS,
 };

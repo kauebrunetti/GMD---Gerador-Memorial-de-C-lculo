@@ -127,6 +127,12 @@
     const listaQueda = listaTrechos(d => d.quedaPct ? fmt(d.quedaPct, 2) + ' %' + (d.quedaOk ? '' : ' (acima de 2 %)') : '[XX]');
     const algumaQuedaRuim = trechosDim.some(tr => !tr.d.quedaOk);
     const infrasUsadas = Array.from(new Set(trechosDim.map(tr => tr.d.infra.familia)));
+    // Tabelas de capacidade citadas: dependem da classe do cabo e dos métodos usados
+    const cabo = c.cabo || window.Calc.CABOS['1kV'];
+    const usaAoAr = trechosDim.some(tr => ['E', 'F', 'G'].includes(tr.d.infra.metodo));
+    const usaBase = trechosDim.some(tr => !['E', 'F', 'G'].includes(tr.d.infra.metodo)) || !usaAoAr;
+    const listaTab = [usaBase ? cabo.tabelaBase : null, usaAoAr ? cabo.tabelaAr : null].filter(Boolean);
+    const tabelasCabo = `<strong>${listaTab.length > 1 ? 'tabelas ' + listaTab.join(' e ') : 'tabela ' + listaTab[0]}</strong> da ABNT NBR 5410 (${cabo.isolacao === 'PVC' ? 'condutores de 750 V, isolação PVC' : 'condutores de 1 kV, isolação EPR/XLPE'})`;
     const metodosUsados = Array.from(new Set(trechosDim.map(tr => tr.d.infra.metodo)))
       .map(m => `<strong>${m}</strong> (${window.Calc.INFRAS[m].desc})`).join(' · ') || '<strong>B1</strong>';
 
@@ -191,7 +197,7 @@
       </div>`;
     };
     const tabelaConclusao = `<table style="width:100%;border-collapse:collapse;font-size:9.5px">
-    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Método</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (HEPR 1 kV)</th><th style="${TH8}">Terra</th><th style="${TH8}">Eletroduto</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
+    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Método</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (${cabo.nome})</th><th style="${TH8}">Terra</th><th style="${TH8}">Eletroduto</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
     <tbody>${trechosCalc.map((tr, i) => { const d = tr.d; const In = tr.circuito ? d.alvo : d.In;
       const motivos = [];
       if (d.secao && In && d.izCorrigida < In) motivos.push('capacidade de condução');
@@ -527,7 +533,9 @@
   </table>
   ${h3('4.1 · Premissas adotadas')}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    ${prem('Condutores', `Cobre, isolação HEPR 90 °C para <strong>1 kV</strong>, não propagante de chama. A capacidade de condução de corrente é a das <strong>tabelas 37 e 39</strong> da ABNT NBR 5410 (condutores de 1 kV, isolação EPR/XLPE; a tabela 36 aplica-se a condutores de 750 V), conforme o <strong>método de referência</strong> da tabela 33 adotado em cada trecho: ${metodosUsados}.`)}
+    ${prem('Condutores', `${cabo.chave === '1kV'
+      ? 'Cobre, isolação HEPR 90 °C, classe <strong>0,6/1 kV</strong>, não propagante de chama.'
+      : 'Cobre, isolação PVC 70 °C, classe <strong>450/750 V</strong>, não propagante de chama.'} A capacidade de condução de corrente é a ${tabelasCabo}, conforme o <strong>método de referência</strong> da tabela 33 adotado em cada trecho: ${metodosUsados}.`)}
     ${prem('Correções', `Fator de temperatura conforme tabela 40 (temperatura do solo, referência 20 °C, para trechos enterrados; temperatura ambiente, referência 30 °C, para os demais); fator de agrupamento conforme tabela 42, quando aplicável. O resultado corrigido é o valor comparado à corrente de projeto.`)}
     ${prem('Margem de projeto', 'Aplica-se uma margem de segurança sobre a corrente nominal no dimensionamento do dispositivo de proteção, que cobre o regime contínuo e a elevação de temperatura no quadro.')}
     ${prem('Recomendação do fabricante', 'Quando a especificação do fabricante do equipamento for mais restritiva que o resultado do cálculo, adota-se a seção do fabricante.')}
@@ -558,13 +566,13 @@
     ${trKV('Potência da estação', phn(pt.P, 'kW'), '52%')}
     ${trKV('Tensão de alimentação', `${pt.V} V ${fasesTxt}`)}
     ${trKV('Tipo de linha elétrica', pt.infra.linha)}
-    ${trKV('Condutor', 'Cobre, isolação HEPR 1 kV')}
+    ${trKV('Condutor', `Cobre, isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '0,6/1 kV' : '450/750 V'}`)}
     <tr><td style="${KV};color:${G1}">Seção adotada</td><td style="${KV};font-weight:600;color:${GREEN_D}">${manual(phn(pt.secao, 'mm²'), pt.secaoManual)}</td></tr>
   </tbody></table>
   ${h3('5.3 · Fator de correção de temperatura')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A temperatura ambiente máxima considerada para o sistema é de <strong>${phn(pt.temp, '°C')}</strong>. Havendo divergência em relação à temperatura de referência da tabela de capacidades, aplica-se o fator de correção da tabela 40 da NBR 5410. Para ${phn(pt.temp, '°C')} na condição de instalação adotada (${pt.infra.fator === 'solo' ? 'linha enterrada' : 'linha não enterrada'}), o fator é <strong>${fmt(pt.fT, 2)}</strong>:</p>
   ${formula(`I<sub>z corrigida</sub> = I<sub>z tabela</sub> × F<sub>T</sub> × F<sub>A</sub> &nbsp;≥&nbsp; I<sub>b</sub>${pt.secao && pt.izCorrigida ? ` &nbsp;→&nbsp; ${fmt(pt.izCorrigida, 1)} A ≥ ${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)} A` : ''}`)}
-  ${conclusao(`Os condutores de cada trecho, em cobre com isolação HEPR 1 kV, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.`, 16)}
+  ${conclusao(`Os condutores de cada trecho, em cobre com isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '1 kV' : '750 V'}, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.`, 16)}
   ${h3('5.4 · Condutor de proteção (terra)')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A seção do condutor de proteção é determinada pela tabela 58 da NBR 5410, em função da seção dos condutores de fase:</p>
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px">
@@ -914,7 +922,7 @@
           ? `QGBT (disjuntor dedicado ${aliTxt}) → QDA Transformador (disjuntor ${c.trafo.disjuntor ? fmt(c.trafo.disjuntor) + ' A' : '[XX] A'}) → transformador ${c.trafo.kva ? fmt(c.trafo.kva) + ' kVA' : '[XX] kVA'} (${c.trafo.primV ? fmt(c.trafo.primV) + ' V ' + c.trafo.primLig : '[XX]'} / ${c.trafo.secV ? fmt(c.trafo.secV) + ' V ' + c.trafo.secLig : '[XX]'}${c.trafo.ip ? ', ' + c.trafo.ip : ''}) → QDA (disjuntor de entrada ${qdaTxt}) → disjuntor ${d} curva C por circuito`
           : `QGBT (disjuntor dedicado ${aliTxt}, que separa o circuito das estações de recarga das demais cargas) → QDA (disjuntor de entrada ${qdaTxt}) → disjuntor ${d} curva C por circuito`)
         : `QGBT → disjuntor exclusivo ${d} curva C`;
-      return `${origem}${kitTrecho} → circuito ${cabo} HEPR 1 kV em eletroduto de ${el} → estação de recarga${multi ? ` (${n} circuitos, C-EV-01 a ${pts[n - 1].id})` : ''}`;
+      return `${origem}${kitTrecho} → circuito ${cabo} ${c.cabo.nome} em eletroduto de ${el} → estação de recarga${multi ? ` (${n} circuitos, C-EV-01 a ${pts[n - 1].id})` : ''}`;
     })();
     out.push(`<div style="font-family:Montserrat,sans-serif">
   ${secHeader(NUM.diagrama, TIT.diagrama, 'diagrama')}
@@ -938,7 +946,9 @@
     <li style="margin-bottom:5px">Não estão incluídos: adequação do padrão de entrada, aumento de demanda junto à concessionária, obras civis de recomposição de pavimento e paisagismo, salvo previsão contratual expressa.</li>
     <li>Alterações de escopo, de local de instalação ou de premissas exigem revisão formal deste documento, com nova emissão e novo número de revisão.</li>
   </ol>
-  <div class="bg-keep" style="background:${RESUMO_BG};border-left:4px solid ${GREEN};${R};padding:11px 14px;margin:0 0 22px"><div style="${KICK};color:${GREEN_D}">Cabos</div><p style="font-size:10px;line-height:1.6;color:${TX1};margin:4px 0 0">A BeGreen utiliza exclusivamente cabos com <strong>dupla isolação 1 kV</strong> (classe 0,6/1 kV, isolação HEPR 90 °C e cobertura externa), em todos os trechos do circuito, do QGBT à estação de recarga.</p></div>
+  <div class="bg-keep" style="background:${RESUMO_BG};border-left:4px solid ${GREEN};${R};padding:11px 14px;margin:0 0 22px"><div style="${KICK};color:${GREEN_D}">Cabos</div><p style="font-size:10px;line-height:1.6;color:${TX1};margin:4px 0 0">${cabo.chave === '1kV'
+      ? 'A BeGreen utiliza exclusivamente cabos com <strong>dupla isolação 1 kV</strong> (classe 0,6/1 kV, isolação HEPR 90 °C e cobertura externa), em todos os trechos do circuito, do QGBT à estação de recarga.'
+      : 'Os condutores deste projeto são de <strong>classe 450/750 V</strong> (isolação PVC 70 °C), em todos os trechos do circuito, do QGBT à estação de recarga, instalados integralmente no interior de eletrodutos ou condutos fechados.'}</p></div>
   ${obsExtra}
   ${secHeader(NUM.conclusao, TIT.conclusao, 'conclusao')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">O disjuntor geral da unidade possui corrente de <strong>${phn(c.geral, 'A')}</strong>. ${multi ? 'As estações de recarga, operando' : 'A estação de recarga, operando'} em sua capacidade máxima (bateria do veículo completamente descarregada), apresenta${multi ? 'm' : ''} consumo de <strong>${phn(c.totalIb, 'A')}</strong>${c.trafo ? `; no primário do transformador, pior caso considerado para a entrada, a corrente é de <strong>${c.correnteEntrada ? fmt(c.correnteEntrada, 1) + ' A' : '[XX] A'}</strong>` : ''}${c.participacao ? ` (${fmt(c.participacao, 1)} % da capacidade instalada)` : ''}. As recargas ocorrem, tipicamente, no período noturno, quando o consumo da unidade é reduzido, por isso a coincidência entre a nova carga e o pico da instalação é baixa.</p>
@@ -978,7 +988,9 @@
       ['DPS', 'dispositivo de proteção contra surtos; limita sobretensões transitórias.'],
       ['Kit de proteção', 'conjunto disjuntor térmico + IDR + DPS instalado junto ao circuito da estação de recarga (até 30 kW).'],
       ['PE', 'condutor de proteção (terra), na cor verde ou verde-amarela.'],
-      ['HEPR', 'isolação de borracha etileno-propileno de alto módulo, temperatura de operação de 90 °C.'],
+      ...(cabo.chave === '1kV'
+        ? [['HEPR', 'isolação de borracha etileno-propileno de alto módulo, temperatura de operação de 90 °C, classe 0,6/1 kV.']]
+        : [['PVC 750 V', 'isolação de cloreto de polivinila, temperatura de operação de 70 °C, classe 450/750 V.']]),
       ['I<sub>b</sub> · I<sub>n</sub> · I<sub>z</sub>', 'corrente de projeto do circuito · corrente nominal do dispositivo de proteção · capacidade de condução do condutor.'],
       ['I<sub>k</sub>', 'corrente de curto-circuito presumida no ponto considerado.'],
       ['Método de referência', 'forma de instalação da linha elétrica (tabela 33 da NBR 5410), que define a capacidade de condução de corrente do cabo: A1 e A2 em parede termicamente isolante, B1 e B2 em eletroduto, C sobre parede ou bandeja, D enterrado, E, F e G ao ar livre.'],
