@@ -312,8 +312,7 @@
     renderTudo();
     atualizarProjetoAtual();
     if (focarCliente) {
-      const d = $form.querySelector('details[data-sec="1"]');
-      if (d && !d.open) d.open = true;
+      irEtapa(1);
       const el = $form.querySelector('[data-chave="cliente"]');
       if (el) el.focus();
     }
@@ -581,8 +580,8 @@
       : '<div class="campo-hint" style="margin-top:6px">Nenhuma foto padrão guardada. Use ★ em uma foto do projeto para reaproveitá-la em outros.</div>';
     const frasesHtml = `<div class="frases">${frases.map((f, i) => `<span class="frase" data-frase="${i}" title="Inserir nas observações">${esc(f)}<span class="x" data-rm-frase="${i}" title="Remover da biblioteca">×</span></span>`).join('')}<span class="frase add" id="add-frase">+ nova frase</span></div>`;
 
-    $form.innerHTML = `
-    <details data-sec="1"><summary>1 · Identificação do cliente</summary><div class="sec-body">
+    $form.innerHTML = `${etapasHtml()}
+    <details data-sec="1"><summary><span class="sec-num">1</span>Identificação do cliente</summary><div class="sec-body">
       ${campo('Cliente / condomínio', inp('cliente').replace('<input ', '<input list="lista-clientes" autocomplete="off" '))}
       ${campo('Endereço da obra', inp('endereco'))}
       <div class="grid2">
@@ -596,7 +595,7 @@
       <button type="button" class="btn-sec" id="btn-nova-revisao" style="margin-top:10px">+ Emitir nova revisão (guarda a versão atual no histórico)</button>
       ${projeto.historicoRevisoes.length ? `<div class="rev-lista">${projeto.historicoRevisoes.map((h, i) => `<div class="rev-item"><span class="nome"><strong>Rev. ${esc(h.revisao)}</strong> · ${dataBrCurta(h.dataRevisao)} · ${esc(h.descricao)}</span><button type="button" class="btn-mini rev-abrir" data-i="${i}" title="Abre a versão guardada como um projeto separado, para consulta ou impressão">abrir cópia</button></div>`).join('')}</div>` : ''}
     </div></details>
-    <details data-sec="2"><summary>2 · Entrada de energia do cliente</summary><div class="sec-body">
+    <details data-sec="2"><summary><span class="sec-num">2</span>Entrada de energia do cliente</summary><div class="sec-body">
       <div class="grid2">
         ${campo('Tensão / configuração', `<select data-chave="par-rede">${[['127|F+N+T', '127 V · F+N+T'], ['127|2F+T', '127 V · 2F+T'], ['127|2F+N+T', '127 V · 2F+N+T'], ['220|F+N+T', '220 V · F+N+T'], ['220|2F+T', '220 V · 2F+T'], ['220|2F+N+T', '220 V · 2F+N+T'], ['220|3F+N+T', '220 V · 3F+N+T'], ['380|3F+N+T', '380 V · 3F+N+T']].map(([v, l]) => `<option value="${v}"${v === `${projeto.tensao}|${projeto.config}` ? ' selected' : ''}>${l}</option>`).join('')}</select>`)}
         ${campo('Disjuntor geral do QGBT (A)', inp('disjuntorGeral', { type: 'number', step: '1' }))}
@@ -606,7 +605,7 @@
         ${campoAv('Esquema de aterramento', sel('aterramento', [['TN-S', 'TN-S (integrado ao aterramento existente)'], ['TT', 'TT (eletrodo próprio, haste exclusiva)']]))}
       </div>
     </div></details>
-    ${trafoSim ? `<details data-sec="3"><summary>3 · Transformador</summary><div class="sec-body">
+    ${trafoSim ? `<details data-sec="3"><summary><span class="sec-num">3</span>Transformador</summary><div class="sec-body">
       <div class="grid2">
         ${campo('Potência (kVA)', inp('trafoPotencia', { type: 'number', step: '0.5' }))}
         ${campo('Tensão do primário', sel('trafoPrimV', [['', '—'], ['127', '127 V'], ['220', '220 V'], ['380', '380 V'], ['440', '440 V']]))}
@@ -615,20 +614,20 @@
         ${campo('Modo de ligação do secundário', sel('trafoSecLig', [['', '—'], ['3F+N+T', '3F+N+T'], ['1F+N+T', '1F+N+T']]))}
         ${campo('Grau de proteção', sel('trafoIp', [['', '—'], ['IP00', 'IP00'], ['IP21', 'IP21'], ['IP65', 'IP65']]))}
       </div>
-    </div></details>` : `<details data-sec="3"><summary>3 · Transformador</summary><div class="sec-body"><div class="campo-hint">Marque "Sim" em "Necessidade de transformador" para preencher.</div></div></details>`}
-    <details data-sec="4"><summary>4 · QDA</summary><div class="sec-body">
+    </div></details>` : `<details data-sec="3"><summary><span class="sec-num">3</span>Transformador</summary><div class="sec-body"><div class="campo-hint">Marque "Sim" em "Necessidade de transformador" para preencher.</div></div></details>`}
+    <details data-sec="4"><summary><span class="sec-num">4</span>QDA</summary><div class="sec-body">
       <div class="grid2">
         ${campo('Quadro de distribuição dedicado?', sel('quadroDistribuicao', [['nao', 'Não'], ['sim', 'Sim']]))}
         ${quadroSim ? campo('Quantidade de estações de recarga', inp('qdQuantidade', { type: 'number', step: '1' })) : ''}
       </div>
     </div></details>
-    <details data-sec="5"><summary>5 · Estações de recarga e circuitos</summary><div class="sec-body">
+    <details data-sec="5"><summary><span class="sec-num">5</span>Estações de recarga e circuitos</summary><div class="sec-body">
       ${cartoes}
       ${quadroSim ? '' : '<button type="button" class="btn-sec" id="add-ponto">+ adicionar ponto de recarga</button>'}
       ${campo('Corrente de descarga do DPS (kA)', sel('dpsKa', window.Calc.DPS_KAS.map(k => [String(k), fmt(k) + ' kA' + (k === window.Calc.DPS_KA ? ' · padrão BeGreen' : (k === 20 ? ' · kit Clamper' : ''))])))}
       ${campo('Conexão das estações', sel('internetCliente', [['sim', 'Ponto de internet do cliente (Wi-Fi ou cabo)'], ['nao', 'Não se aplica (4G próprio ou sem conexão)']]))}
     </div></details>
-    <details data-sec="6"><summary>6 · Trechos e dimensionamento</summary><div class="sec-body">
+    <details data-sec="6"><summary><span class="sec-num">6</span>Trechos e dimensionamento</summary><div class="sec-body">
       ${campo('Classe do cabo', sel('classeCabo', Object.values(window.Calc.CABOS).map(cb => [cb.chave, cb.chave === '1kV' ? 'HEPR 1 kV · dupla isolação (padrão BeGreen)' : 'PVC 750 V · isolação simples'])))}
       <div class="grid2">
         ${campo('Temperatura ambiente (°C)', inp('tempAmbiente', { type: 'number', step: '1' }))}
@@ -637,34 +636,35 @@
       </div>
       ${trechosHtml}
     </div></details>
-    <details data-sec="7"${projeto.analiseDemanda === 'sim' ? '' : ''}><summary>7 · Análise de demanda</summary><div class="sec-body">
+    <details data-sec="7"${projeto.analiseDemanda === 'sim' ? '' : ''}><summary><span class="sec-num">7</span>Análise de demanda</summary><div class="sec-body">
       <div class="grid2">
         ${campo('Análise de demanda realizada?', sel('analiseDemanda', [['nao', 'Não (seção omitida do memorial)'], ['sim', 'Sim (incluir no memorial)']]))}
         ${projeto.analiseDemanda === 'sim' ? campo('Potência disponível medida (kW)', inp('potenciaDisponivel', { type: 'number', step: '0.5' })) : ''}
         ${projeto.analiseDemanda === 'sim' ? campo('Pontos simultâneos', inp('pontosSimultaneos', { type: 'number', step: '1' })) : ''}
       </div>
     </div></details>
-    <details data-sec="8"><summary>8 · Conclusão</summary><div class="sec-body">
+    <details data-sec="8"><summary><span class="sec-num">8</span>Conclusão</summary><div class="sec-body">
       <div class="grid2">
         ${campo('Alterar padrão de entrada?', sel('alterarPadrao', [['nao', 'Não (informações omitidas)'], ['sim', 'Sim (indicamos a alteração)']]))}
       </div>
       <div class="calc-resumo" id="resumo-participacao"${c.geral && c.totalIb ? '' : ' style="display:none"'}>${participacaoHtml(c)}</div>
     </div></details>
-    <details data-sec="9"><summary>9 · Fotos do local</summary><div class="sec-body">
+    <details data-sec="9"><summary><span class="sec-num">9</span>Fotos do local</summary><div class="sec-body">
       <input type="file" id="fotos-input" accept="image/*" multiple style="display:none" />
       <button type="button" class="btn-sec" id="add-fotos">+ adicionar fotos</button>
       <div class="fotos">${fotosHtml}</div>
       <div class="campo-label" style="margin-top:12px">Biblioteca de fotos padrão (clique para inserir)</div>
       ${biblioHtml}
     </div></details>
-    <details data-sec="10"><summary>10 · Observações</summary><div class="sec-body">
+    <details data-sec="10"><summary><span class="sec-num">10</span>Observações</summary><div class="sec-body">
       ${campo('', `<textarea data-chave="observacoes" rows="5">${(projeto.observacoes || '').replace(/</g, '&lt;')}</textarea>`)}
       <div class="campo-label">Frases prontas (clique para inserir)</div>
       ${frasesHtml}
-    </div></details>`;
+    </div></details>
+    ${etapasNavHtml()}`;
     renderListaCatalogo();
     renderListaClientes();
-    aplicarSecoes();
+    aplicarEtapa();
     travarFormulario();
   }
   // Documento emitido: campos travados até abrir uma nova revisão
@@ -672,30 +672,73 @@
     const travado = projeto.status === 'emitido';
     $form.classList.toggle('travado', travado);
     $form.querySelectorAll('input, select, textarea, button').forEach(el => {
-      if (el.classList.contains('rev-abrir')) return;
+      if (el.classList.contains('rev-abrir') || el.closest('.etapas, .etapas-nav')) return;
       el.disabled = travado;
     });
     $form.querySelectorAll('.frase, .biblio-item').forEach(el => el.classList.toggle('off', travado));
   }
 
-  // Estado aberto/fechado das seções do formulário: só muda quando a pessoa clica;
-  // por padrão todas vêm minimizadas e o estado sobrevive a re-renderizações e recargas.
-  const LS_SECOES = 'begreen-secoes-abertas';
-  let secoesAbertas = {};
-  try { secoesAbertas = JSON.parse(localStorage.getItem(LS_SECOES) || '{}') || {}; } catch (e) { secoesAbertas = {}; }
-  let aplicandoSecoes = false;
-  function aplicarSecoes() {
-    aplicandoSecoes = true;
-    $form.querySelectorAll('details[data-sec]').forEach(d => { d.open = !!secoesAbertas[d.dataset.sec]; });
-    // o evento "toggle" é assíncrono; libera a gravação no próximo ciclo
-    setTimeout(() => { aplicandoSecoes = false; }, 0);
+  // Assistente por etapas: uma seção do formulário por vez, com barra de progresso
+  // e botões Anterior/Próximo. A etapa atual sobrevive a re-renderizações e recargas.
+  const ETAPAS = [
+    [1, 'Identificação do cliente', 'Como deve sair na capa do memorial.'],
+    [2, 'Entrada de energia do cliente', 'Rede do cliente, disjuntor geral e aterramento.'],
+    [3, 'Transformador', 'Só quando houver transformador dedicado.'],
+    [4, 'QDA', 'Quadro de distribuição das estações.'],
+    [5, 'Estações de recarga e circuitos', 'Carregadores, potências, DPS e conexão.'],
+    [6, 'Trechos e dimensionamento', 'Cabos, métodos de instalação e temperaturas.'],
+    [7, 'Análise de demanda', 'Medição de demanda, quando realizada.'],
+    [8, 'Conclusão', 'Padrão de entrada e participação das estações.'],
+    [9, 'Fotos do local', 'Opcionais, mas toda foto precisa de legenda.'],
+    [10, 'Observações', 'Texto livre e frases prontas.'],
+  ];
+  const LS_ETAPA = 'begreen-etapa-atual';
+  let etapaAtual = 1;
+  try { etapaAtual = Math.min(ETAPAS.length, Math.max(1, parseInt(localStorage.getItem(LS_ETAPA), 10) || 1)); } catch (e) { etapaAtual = 1; }
+  function etapasHtml() {
+    return `<div class="etapas">
+      <div class="etapas-barra">${ETAPAS.map(([n, t]) => `<button type="button" class="etapa-pt${n < etapaAtual ? ' ok' : ''}${n === etapaAtual ? ' atual' : ''}" data-etapa="${n}" title="${n} · ${t}"></button>`).join('')}</div>
+      <div class="etapas-rot"><span>Etapa ${etapaAtual} de ${ETAPAS.length}</span><span class="etapas-pend"></span></div>
+    </div>`;
   }
-  $form.addEventListener('toggle', (e) => {
-    const d = e.target;
-    if (aplicandoSecoes || !(d instanceof HTMLDetailsElement) || !d.dataset.sec) return;
-    secoesAbertas[d.dataset.sec] = d.open;
-    try { localStorage.setItem(LS_SECOES, JSON.stringify(secoesAbertas)); } catch (err) { /* ignora */ }
-  }, true);
+  function etapasNavHtml() {
+    const ultima = etapaAtual >= ETAPAS.length;
+    return `<div class="etapas-nav">
+      <button type="button" class="etapa-btn" data-nav="ant"${etapaAtual <= 1 ? ' disabled' : ''}>‹ Anterior</button>
+      <button type="button" class="etapa-btn pri" data-nav="${ultima ? 'fim' : 'prox'}">${ultima ? 'Concluir ✓' : 'Próximo ›'}</button>
+    </div>`;
+  }
+  function aplicarEtapa() {
+    $form.querySelectorAll('details[data-sec]').forEach(d => {
+      const n = +d.dataset.sec, ativa = n === etapaAtual;
+      d.open = ativa; d.hidden = !ativa;
+      const corpo = d.querySelector('.sec-body');
+      const e = ETAPAS.find(x => x[0] === n);
+      if (corpo && e && !corpo.querySelector('.sec-sub')) corpo.insertAdjacentHTML('afterbegin', `<div class="sec-sub">${e[2]}</div>`);
+    });
+    $form.querySelectorAll('.etapa-pt').forEach(b => {
+      const n = +b.dataset.etapa;
+      b.classList.toggle('ok', n < etapaAtual); b.classList.toggle('atual', n === etapaAtual);
+    });
+    const rot = $form.querySelector('.etapas-rot span'); if (rot) rot.textContent = `Etapa ${etapaAtual} de ${ETAPAS.length}`;
+    const nav = $form.querySelector('.etapas-nav'); if (nav) nav.outerHTML = etapasNavHtml();
+    if (typeof marcarEtapasPendentes === 'function') marcarEtapasPendentes();
+  }
+  function irEtapa(n, focar) {
+    etapaAtual = Math.min(ETAPAS.length, Math.max(1, n || 1));
+    try { localStorage.setItem(LS_ETAPA, String(etapaAtual)); } catch (err) { /* ignora */ }
+    aplicarEtapa();
+    const painel = document.getElementById('painel-form');
+    if (painel && focar !== false) painel.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $form.addEventListener('click', (e) => {
+    if (e.target.closest('summary')) { e.preventDefault(); return; }
+    const pt = e.target.closest('.etapa-pt'); if (pt) { irEtapa(+pt.dataset.etapa); return; }
+    const nav = e.target.closest('[data-nav]'); if (!nav) return;
+    if (nav.dataset.nav === 'ant') irEtapa(etapaAtual - 1);
+    else if (nav.dataset.nav === 'prox') irEtapa(etapaAtual + 1);
+    else { pendAberta = true; renderPendencias(); const painel = document.getElementById('painel-form'); if (painel) painel.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
 
   // ── Preview ────────────────────────────────────────────────
   const $preview = document.getElementById('preview');
@@ -1096,13 +1139,22 @@
     renderFluxo(L.length);
     $pend.innerHTML = `<div class="pend-head"><span>${L.length ? `${L.length} pendência(s) antes de emitir` : 'Sem pendências: pronto para emitir'}</span><span>${L.length ? (pendAberta ? '▾' : '▸') : '✓'}</span></div>`
       + (L.length && pendAberta ? `<div class="pend-lista">${L.map(x => `<div class="pend-item" data-sec="${x.sec}" data-chave="${esc(x.chave)}"><span class="pend-sec">${x.sec ? 'Seção ' + x.sec : 'Doc.'}</span><span>${esc(x.texto)}</span></div>`).join('')}</div>` : '');
+    marcarEtapasPendentes(L);
+  }
+  // Na barra de etapas, pinta de vermelho as seções que ainda têm pendência
+  function marcarEtapasPendentes(L) {
+    L = L || listarPendencias();
+    const secs = new Set(L.map(x => String(x.sec)));
+    $form.querySelectorAll('.etapa-pt').forEach(b => b.classList.toggle('falta', secs.has(b.dataset.etapa)));
+    const r = $form.querySelector('.etapas-pend');
+    if (r) { r.textContent = L.length ? `${L.length} pendência(s)` : 'Sem pendências'; r.classList.toggle('falta', L.length > 0); }
   }
   if ($pend) $pend.addEventListener('click', (e) => {
     if (e.target.closest('.pend-head')) { pendAberta = !pendAberta; renderPendencias(); return; }
     const it = e.target.closest('.pend-item');
     if (!it) return;
     const sec = it.dataset.sec, chave = it.dataset.chave;
-    if (sec && sec !== '0') { const d = $form.querySelector(`details[data-sec="${sec}"]`); if (d && !d.open) d.open = true; }
+    if (sec && sec !== '0') irEtapa(+sec, false);
     let el = chave ? $form.querySelector(`[data-chave="${chave}"]`) : null;
     const mf = /^foto-legenda-(\d+)$/.exec(chave || '');
     if (!el && mf) el = $form.querySelector(`[data-foto-legenda="${mf[1]}"]`);

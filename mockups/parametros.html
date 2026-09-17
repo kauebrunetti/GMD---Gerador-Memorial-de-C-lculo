@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dez designs · Painel de parâmetros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#1B1C1B; --tx1:#2E302D; --tx2:#3A3C39; --g1:#6E736D; --g2:#8A8B83; --g3:#A9ABA4; --ln1:#D8DAD4; --ln2:#E4E6E1; --bg1:#F2F3F0; --bg2:#F7F8F5; --green:#3AAA35; --gd:#2E8C2A; --gl:#8CD07F; --resumo:#EEF6ED; --lime:#D2D727; --red:#C0392B; --redbg:#FBEEEB; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8e9e4; font-family: Montserrat, sans-serif; color: var(--tx1); }
+  .topo { background: var(--ink); color: #fff; padding: 14px 28px; font-family: Oswald, sans-serif; letter-spacing: .16em; text-transform: uppercase; font-size: 12px; position: sticky; top: 0; z-index: 5; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .topo a { color: var(--gl); text-decoration: none; font-size: 11px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(470px, 1fr)); gap: 28px; padding: 28px; }
+  .opcao { background: transparent; }
+  .opcao h2 { font-family: Oswald, sans-serif; font-weight: 600; text-transform: uppercase; font-size: 19px; margin: 0 0 4px; color: var(--ink); }
+  .opcao p.desc { margin: 0 0 12px; font-size: 12.5px; color: var(--g1); min-height: 38px; line-height: 1.45; }
+  /* moldura de cada mockup: mesma largura do painel real */
+  .painel { width: 440px; height: 700px; overflow: hidden; position: relative; border-radius: 10px; box-shadow: 0 2px 12px rgba(27,28,27,.14); background: #fff; }
+  .painel.escuro { box-shadow: 0 2px 14px rgba(0,0,0,.3); }
+  .pf { height: 100%; overflow: hidden; padding: 14px 16px; font-size: 12.5px; }
+  /* ── base comum reaproveitada com pequenas variações ── */
+  .lbl { font-family: Oswald, sans-serif; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--g2); display: block; margin-bottom: 3px; }
+  .inp { width: 100%; font-family: Montserrat, sans-serif; font-size: 12.5px; color: var(--ink); border: 1px solid var(--ln1); background: #fff; padding: 7px 8px; border-radius: 6px; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+  .campo { margin-bottom: 8px; }
+  .sec { border: 1px solid var(--ln1); border-radius: 8px; background: #fff; margin-bottom: 10px; overflow: hidden; }
+  .sec > .h { font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); padding: 10px 12px; background: var(--bg2); border-left: 3px solid var(--green); }
+  .sec > .b { padding: 12px; }
+  .status { display: flex; align-items: center; gap: 8px; border: 1px solid var(--ln1); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 11px; color: var(--tx2); }
+  .status .tag { font-family: Oswald, sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; background: var(--bg1); color: var(--g1); }
+  .pend { border: 1px solid var(--ln1); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+  .pend .h { display: flex; justify-content: space-between; padding: 9px 12px; font-family: Oswald, sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; background: var(--redbg); color: #8a2d26; border-left: 3px solid var(--red); }
+  .btn-sec { font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; border: 1px dashed var(--green); background: var(--resumo); color: var(--gd); padding: 8px 12px; width: 100%; border-radius: 6px; }
+
+  /* ═══ 1 · Atual refinado ═══ */
+  .d1 .pf { background: #fff; }
+  .d1 .sec { border-color: var(--ln2); border-radius: 12px; }
+  .d1 .sec > .h { border-left: 0; padding: 12px 14px; background: #fff; display: flex; align-items: center; gap: 10px; }
+  .d1 .sec > .h .num { width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; }
+  .d1 .sec > .h.fechada { color: var(--g1); }
+  .d1 .sec > .h.fechada .num { background: var(--bg1); color: var(--g1); }
+  .d1 .inp { background: var(--bg2); border-color: transparent; border-radius: 8px; padding: 9px 10px; }
+  .d1 .inp:focus { background: #fff; border-color: var(--green); }
+  .d1 .status { border: 0; background: var(--bg1); border-radius: 12px; }
+  .d1 .pend { border: 0; border-radius: 12px; }
+  .d1 .pend .h { border-left: 0; border-radius: 12px; }
+
+  /* ═══ 2 · Cards flutuantes ═══ */
+  .d2 .pf { background: var(--bg1); }
+  .d2 .sec { border: 0; border-radius: 14px; box-shadow: 0 1px 3px rgba(27,28,27,.08), 0 6px 18px rgba(27,28,27,.06); margin-bottom: 12px; }
+  .d2 .sec > .h { border-left: 0; background: #fff; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .d2 .sec > .h .ico { width: 26px; height: 26px; border-radius: 8px; background: var(--resumo); color: var(--gd); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  .d2 .sec > .h .ico.sub { background: var(--bg1); color: var(--g2); }
+  .d2 .status, .d2 .pend { border: 0; border-radius: 14px; background: #fff; box-shadow: 0 1px 3px rgba(27,28,27,.08); }
+  .d2 .pend .h { border-left: 0; }
+  .d2 .inp { border-radius: 8px; }
+
+  /* ═══ 3 · Assistente por etapas ═══ */
+  .d3 .pf { background: #fff; padding: 0; }
+  .d3 .passos { display: flex; gap: 4px; padding: 14px 16px 10px; }
+  .d3 .passos span { flex: 1; height: 5px; border-radius: 3px; background: var(--ln2); }
+  .d3 .passos span.ok { background: var(--green); }
+  .d3 .passos span.atual { background: var(--ink); }
+  .d3 .rot { display: flex; justify-content: space-between; padding: 0 16px 8px; font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--g2); }
+  .d3 .tit { padding: 6px 16px 2px; font-family: Oswald, sans-serif; font-size: 22px; font-weight: 600; text-transform: uppercase; color: var(--ink); }
+  .d3 .sub { padding: 0 16px 14px; font-size: 12px; color: var(--g1); }
+  .d3 .corpo { padding: 0 16px; }
+  .d3 .inp { padding: 11px 12px; font-size: 14px; border-radius: 8px; }
+  .d3 .lbl { font-size: 9.5px; }
+  .d3 .campo { margin-bottom: 12px; }
+  .d3 .nav { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--ln2); background: #fff; }
+  .d3 .nav button { flex: 1; font-family: Oswald, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 11px; border-radius: 8px; border: 1px solid var(--ln1); background: #fff; color: var(--g1); }
+  .d3 .nav button.pri { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* ═══ 4 · Painel escuro ═══ */
+  .d4 .pf { background: #1B1C1B; color: #E9EAE6; }
+  .d4 .lbl { color: var(--gl); }
+  .d4 .inp { background: #262826; border-color: #343633; color: #fff; }
+  .d4 .sec { background: #232522; border-color: #343633; }
+  .d4 .sec > .h { background: #2A2C29; color: #fff; border-left-color: var(--lime); }
+  .d4 .status { border-color: #343633; color: #C9CAC4; }
+  .d4 .status .tag { background: #343633; color: #C9CAC4; }
+  .d4 .pend { border-color: #343633; }
+  .d4 .pend .h { background: #3a2422; color: #F1B4AC; border-left-color: var(--red); }
+  .d4 .btn-sec { background: rgba(58,170,53,.12); color: var(--gl); border-color: var(--green); }
+
+  /* ═══ 5 · Minimal em linhas ═══ */
+  .d5 .pf { background: #fff; padding: 18px 20px; }
+  .d5 .sec { border: 0; margin-bottom: 18px; }
+  .d5 .sec > .h { border: 0; background: transparent; padding: 0 0 10px; font-size: 13px; letter-spacing: .08em; color: var(--ink); display: flex; justify-content: space-between; }
+  .d5 .sec > .h small { font-family: Montserrat, sans-serif; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--g2); font-weight: 400; }
+  .d5 .sec > .b { padding: 0; }
+  .d5 .inp { border: 0; border-bottom: 1px solid var(--ln1); border-radius: 0; padding: 8px 0; background: transparent; font-size: 13.5px; }
+  .d5 .lbl { font-family: Montserrat, sans-serif; letter-spacing: .02em; text-transform: none; font-size: 11px; color: var(--g1); }
+  .d5 .campo { margin-bottom: 14px; }
+  .d5 .status, .d5 .pend { border: 0; padding: 0; margin-bottom: 14px; }
+  .d5 .status .tag { background: transparent; color: var(--g1); padding: 0; }
+  .d5 .pend .h { background: transparent; border: 0; color: var(--red); padding: 0; font-family: Montserrat, sans-serif; text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .d5 .fech { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--ln2); font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--g1); }
+
+  /* ═══ 6 · Abas no topo ═══ */
+  .d6 .pf { background: #fff; padding: 0; }
+  .d6 .abas { display: flex; overflow: hidden; border-bottom: 1px solid var(--ln1); background: var(--bg2); }
+  .d6 .abas span { flex: none; padding: 10px 12px; font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--g1); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .d6 .abas span.at { color: var(--ink); border-bottom-color: var(--green); background: #fff; }
+  .d6 .abas span i { font-style: normal; display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: var(--ln2); color: var(--g1); font-size: 9px; text-align: center; line-height: 16px; margin-right: 6px; }
+  .d6 .abas span.at i { background: var(--green); color: #fff; }
+  .d6 .abas span.ok i { background: var(--gl); color: var(--ink); }
+  .d6 .corpo { padding: 16px; }
+  .d6 .inp { border-radius: 6px; }
+  .d6 .status { margin: 14px 16px 0; }
+
+  /* ═══ 7 · Grade compacta ═══ */
+  .d7 .pf { background: #fff; padding: 12px; font-size: 11.5px; }
+  .d7 .sec { border-radius: 4px; margin-bottom: 8px; }
+  .d7 .sec > .h { padding: 7px 10px; font-size: 10px; border-left-width: 2px; }
+  .d7 .sec > .b { padding: 8px 10px; }
+  .d7 .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px 8px; }
+  .d7 .campo { margin-bottom: 6px; }
+  .d7 .lbl { font-size: 8px; margin-bottom: 2px; }
+  .d7 .inp { padding: 5px 7px; font-size: 11.5px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .d7 .status, .d7 .pend { border-radius: 4px; margin-bottom: 8px; }
+  .d7 .status { padding: 6px 10px; }
+  .d7 .pend .h { padding: 7px 10px; }
+
+  /* ═══ 8 · Linha do tempo ═══ */
+  .d8 .pf { background: #fff; padding-left: 38px; position: relative; }
+  .d8 .pf::before { content: ''; position: absolute; left: 22px; top: 90px; bottom: 0; width: 2px; background: var(--ln2); }
+  .d8 .sec { border: 1px solid var(--ln2); position: relative; border-radius: 10px; }
+  .d8 .sec::before { content: attr(data-st); position: absolute; left: -24px; top: 12px; width: 18px; height: 18px; border-radius: 50%; background: var(--ln2); color: var(--g1); font-size: 10px; text-align: center; line-height: 18px; font-weight: 700; }
+  .d8 .sec.ok::before { background: var(--green); color: #fff; }
+  .d8 .sec.at::before { background: var(--ink); color: #fff; }
+  .d8 .sec.al::before { background: var(--red); color: #fff; }
+  .d8 .sec > .h { border-left: 0; background: #fff; }
+  .d8 .sec > .h small { display: block; font-family: Montserrat, sans-serif; text-transform: none; letter-spacing: 0; font-size: 10.5px; color: var(--g2); font-weight: 400; margin-top: 2px; }
+  .d8 .status { border: 0; padding: 0 0 8px; margin: 0 0 0 -22px; }
+  .d8 .pend { margin-left: -22px; }
+
+  /* ═══ 9 · Resumo em chips ═══ */
+  .d9 .pf { background: var(--bg2); }
+  .d9 .sec { border: 0; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(27,28,27,.06); }
+  .d9 .sec > .h { border-left: 0; background: #fff; padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .d9 .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .d9 .chip { font-size: 10.5px; padding: 4px 9px; border-radius: 20px; background: var(--resumo); color: var(--gd); font-weight: 500; }
+  .d9 .chip.vazio { background: var(--redbg); color: var(--red); }
+  .d9 .chip.neutro { background: var(--bg1); color: var(--g1); }
+  .d9 .inp { border-radius: 10px; background: var(--bg2); border-color: transparent; padding: 9px 10px; }
+  .d9 .status { border: 0; background: #fff; border-radius: 16px; }
+  .d9 .pend { border: 0; border-radius: 16px; }
+  .d9 .pend .h { border-left: 0; }
+
+  /* ═══ 10 · Editorial (o documento) ═══ */
+  .d10 .pf { background: #FBFBF9; padding: 18px 20px; }
+  .d10 .sec { border: 0; border-top: 2px solid var(--ink); border-radius: 0; background: transparent; margin-bottom: 14px; }
+  .d10 .sec > .h { border: 0; background: transparent; padding: 8px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+  .d10 .sec > .h .num { font-family: Oswald, sans-serif; font-size: 22px; font-weight: 600; color: var(--green); line-height: 1; }
+  .d10 .sec > .h .t { font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+  .d10 .sec.f { border-top-color: var(--ln1); }
+  .d10 .sec.f > .h .num { color: var(--g3); }
+  .d10 .sec.f > .h .t { color: var(--g1); font-weight: 500; }
+  .d10 .sec > .b { padding: 0 0 6px; }
+  .d10 .inp { background: #fff; border-color: var(--ln1); border-radius: 4px; }
+  .d10 .lbl { color: var(--gd); }
+  .d10 .status { border: 0; padding: 0 0 10px; border-bottom: 1px solid var(--ln1); border-radius: 0; margin-bottom: 14px; }
+  .d10 .status .tag { background: var(--ink); color: #fff; }
+  .d10 .pend { border: 0; border-radius: 0; }
+  .d10 .pend .h { background: transparent; border-left: 0; padding: 0 0 10px; }
+</style>
+</head>
+<body>
+<div class="topo">Dez designs · painel de parâmetros
+  <a href="#d1">1 Refinado</a><a href="#d2">2 Cards</a><a href="#d3">3 Etapas</a><a href="#d4">4 Escuro</a><a href="#d5">5 Minimal</a><a href="#d6">6 Abas</a><a href="#d7">7 Grade</a><a href="#d8">8 Linha do tempo</a><a href="#d9">9 Chips</a><a href="#d10">10 Editorial</a>
+</div>
+<div class="grade" id="grade"></div>
+
+<script>
+  const campos = (cls) => `
+    <div class="campo"><span class="lbl">Cliente / condomínio</span><input class="inp" value="Condomínio Jardim das Acácias" /></div>
+    <div class="campo"><span class="lbl">Endereço da obra</span><input class="inp" value="Rua das Palmeiras, 245" /></div>
+    <div class="g2">
+      <div class="campo"><span class="lbl">Cidade/UF</span><input class="inp" value="São Paulo/SP" /></div>
+      <div class="campo"><span class="lbl">Nº do documento</span><input class="inp" value="BG-ME-26-0004" /></div>
+      <div class="campo"><span class="lbl">Revisão</span><input class="inp" value="Rev. 00" /></div>
+      <div class="campo"><span class="lbl">Data da revisão</span><input class="inp" value="17/09/2026" /></div>
+      <div class="campo"><span class="lbl">ART de execução (nº)</span><input class="inp" value="" placeholder="" /></div>
+      <div class="campo"><span class="lbl">Descrição desta revisão</span><input class="inp" value="Emissão inicial" /></div>
+    </div>
+    <button class="btn-sec">+ Emitir nova revisão</button>`;
+  const status = `<div class="status"><span class="tag">Rascunho</span><span>Resolva as pendências, marque como revisado e emita.</span></div>`;
+  const pend = `<div class="pend"><div class="h"><span>3 pendência(s) antes de emitir</span><span>▸</span></div></div>`;
+  const secsF = (h) => ['2 · Entrada de energia do cliente', '3 · Transformador', '4 · QDA', '5 · Estações de recarga e circuitos'].map(h).join('');
+
+  const designs = [
+    ['d1', '1 · Atual refinado', 'O que existe hoje, com o acabamento acertado: campos em cinza-claro sem borda, seções com número em círculo, cantos mais generosos e mais ar entre os blocos. Menor mudança de hábito.',
+      `${status}${pend}<div class="sec"><div class="h"><span class="num">1</span>Identificação do cliente</div><div class="b">${campos()}</div></div>${secsF(t => `<div class="sec"><div class="h fechada"><span class="num">${t[0]}</span>${t.slice(4)}</div></div>`)}`],
+    ['d2', '2 · Cards flutuantes', 'Fundo cinza e cada seção como um cartão branco com sombra suave e ícone. Visual de aplicativo moderno; as seções ganham presença e separação clara.',
+      `${status}${pend}<div class="sec"><div class="h"><span class="ico">👤</span>1 · Identificação do cliente</div><div class="b">${campos()}</div></div>${[['⚡','2 · Entrada de energia do cliente'],['⟳','3 · Transformador'],['▦','4 · QDA'],['🔌','5 · Estações de recarga e circuitos']].map(([i,t]) => `<div class="sec"><div class="h"><span class="ico sub">${i}</span>${t}</div></div>`).join('')}`],
+    ['d3', '3 · Assistente por etapas', 'Uma seção por vez, com barra de progresso e botões Anterior/Próximo. Campos maiores e foco total no que está sendo preenchido. Ótimo para quem está aprendendo; um pouco mais lento para quem já domina.',
+      `<div class="passos"><span class="ok"></span><span class="atual"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+       <div class="rot"><span>Etapa 2 de 10</span><span>3 pendências</span></div>
+       <div class="tit">Identificação do cliente</div><div class="sub">Como deve sair na capa do memorial.</div>
+       <div class="corpo">${campos()}</div>
+       <div class="nav"><button>‹ Anterior</button><button class="pri">Próximo: energia ›</button></div>`],
+    ['d4', '4 · Painel escuro', 'O formulário em fundo escuro, como a barra superior, com rótulos em verde-claro. O documento branco ao lado ganha destaque e o contraste reduz o cansaço em uso longo.',
+      `${status}${pend}<div class="sec"><div class="h">1 · Identificação do cliente</div><div class="b">${campos()}</div></div>${secsF(t => `<div class="sec"><div class="h">${t}</div></div>`)}`],
+    ['d5', '5 · Minimal em linhas', 'Sem caixas: campos só com a linha inferior, rótulos em texto normal e seções separadas por espaço. Leve e elegante; exige disciplina de alinhamento, mas lê muito bem.',
+      `${status}${pend}<div class="sec"><div class="h">1 · Identificação do cliente <small>8 campos</small></div><div class="b">${campos()}</div></div>${secsF(t => `<div class="fech"><span>${t}</span><span>›</span></div>`)}`],
+    ['d6', '6 · Abas no topo', 'Em vez de acordeão, abas numeradas com marcação de concluído. O painel mostra uma seção de cada vez e a navegação fica sempre visível, sem rolar.',
+      `<div class="abas"><span class="ok"><i>✓</i>Cliente</span><span class="at"><i>2</i>Energia</span><span><i>3</i>Trafo</span><span><i>4</i>QDA</span><span><i>5</i>Estações</span><span><i>6</i>Trechos</span></div>
+       ${status.replace('class="status"', 'class="status"')}<div class="corpo">${campos()}</div>`],
+    ['7'.replace('7','d7'), '7 · Grade compacta', 'Painel técnico: três colunas, campos baixos com fonte monoespaçada e rótulos mínimos. Cabe muito mais na tela, sem rolar; para quem preenche dezenas por dia e quer velocidade.',
+      `${status}${pend}<div class="sec"><div class="h">1 · Identificação do cliente</div><div class="b">
+        <div class="campo"><span class="lbl">Cliente / condomínio</span><input class="inp" value="Condomínio Jardim das Acácias" /></div>
+        <div class="campo"><span class="lbl">Endereço da obra</span><input class="inp" value="Rua das Palmeiras, 245" /></div>
+        <div class="g3">
+          <div class="campo"><span class="lbl">Cidade/UF</span><input class="inp" value="São Paulo/SP" /></div>
+          <div class="campo"><span class="lbl">Nº documento</span><input class="inp" value="BG-ME-26-0004" /></div>
+          <div class="campo"><span class="lbl">Revisão</span><input class="inp" value="00" /></div>
+          <div class="campo"><span class="lbl">Data</span><input class="inp" value="17/09/2026" /></div>
+          <div class="campo"><span class="lbl">ART</span><input class="inp" value="" /></div>
+          <div class="campo"><span class="lbl">Descrição</span><input class="inp" value="Emissão inicial" /></div>
+        </div></div></div>
+        <div class="sec"><div class="h">2 · Entrada de energia</div><div class="b"><div class="g3">
+          <div class="campo"><span class="lbl">Tensão</span><input class="inp" value="220 V · 2F+N+T" /></div>
+          <div class="campo"><span class="lbl">Disj. geral</span><input class="inp" value="100" /></div>
+          <div class="campo"><span class="lbl">Ik (kA)</span><input class="inp" value="6" /></div>
+          <div class="campo"><span class="lbl">Trafo</span><input class="inp" value="Não" /></div>
+          <div class="campo"><span class="lbl">Aterr. exist.</span><input class="inp" value="Sim" /></div>
+          <div class="campo"><span class="lbl">Esquema</span><input class="inp" value="TN-S" /></div>
+        </div></div></div>
+        ${['3 · Transformador','4 · QDA','5 · Estações de recarga'].map(t => `<div class="sec"><div class="h">${t}</div></div>`).join('')}`],
+    ['d8', '8 · Linha do tempo', 'Uma linha vertical guia as seções, com um marcador de estado em cada uma: verde concluída, preto em edição, vermelho com pendência. Dá visão do andamento do preenchimento de relance.',
+      `${status}${pend}<div class="sec at" data-st="1"><div class="h">Identificação do cliente<small>Como sai na capa</small></div><div class="b">${campos()}</div></div>
+       <div class="sec ok" data-st="✓"><div class="h">Entrada de energia do cliente<small>220 V · 2F+N+T · 100 A</small></div></div>
+       <div class="sec" data-st="3"><div class="h">Transformador<small>Não se aplica</small></div></div>
+       <div class="sec al" data-st="!"><div class="h">QDA<small>Falta a quantidade de estações</small></div></div>
+       <div class="sec" data-st="5"><div class="h">Estações de recarga e circuitos</div></div>`],
+    ['d9', '9 · Resumo em chips', 'Seções fechadas mostram os valores em chips (verde preenchido, vermelho faltando), então o time vê o projeto inteiro sem abrir nada. Aberta, a seção tem campos arredondados e suaves.',
+      `${status}${pend}<div class="sec"><div class="h">1 · Identificação do cliente <span style="color:var(--g2)">▴</span></div><div class="b">${campos()}</div></div>
+       <div class="sec"><div class="h">2 · Entrada de energia <span style="color:var(--g2)">▾</span></div><div class="chips"><span class="chip">220 V · 2F+N+T</span><span class="chip">Disjuntor 100 A</span><span class="chip">Ik 6 kA</span><span class="chip neutro">Sem transformador</span><span class="chip">TN-S</span></div></div>
+       <div class="sec"><div class="h">4 · QDA <span style="color:var(--g2)">▾</span></div><div class="chips"><span class="chip">Dedicado</span><span class="chip vazio">Quantidade de estações</span></div></div>
+       <div class="sec"><div class="h">5 · Estações de recarga <span style="color:var(--g2)">▾</span></div><div class="chips"><span class="chip">C-EV-01 · 7,4 kW · Tipo 2</span><span class="chip">C-EV-02 · 7,4 kW · Tipo 2</span><span class="chip neutro">DPS 45 kA</span></div></div>`],
+    ['d10', '10 · Editorial', 'O formulário com a cara do memorial: fundo quase branco, número da seção grande em verde, filete preto no topo de cada bloco e rótulos verdes. Formulário e documento passam a ser uma peça só.',
+      `${status}${pend}<div class="sec"><div class="h"><span class="num">01</span><span class="t">Identificação do cliente</span></div><div class="b">${campos()}</div></div>
+       ${[['02','Entrada de energia do cliente'],['03','Transformador'],['04','QDA'],['05','Estações de recarga e circuitos']].map(([n,t]) => `<div class="sec f"><div class="h"><span class="num">${n}</span><span class="t">${t}</span></div></div>`).join('')}`],
+  ];
+  document.getElementById('grade').innerHTML = designs.map(([cls, titulo, desc, html]) => `<section class="opcao ${cls}" id="${cls}"><h2>${titulo}</h2><p class="desc">${desc}</p><div class="painel${cls === 'd4' ? ' escuro' : ''}"><div class="pf">${html}</div></div></section>`).join('');
+</script>
+</body>
+</html>
