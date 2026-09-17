@@ -19,7 +19,7 @@
       atualizadoEm: new Date().toISOString(),
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
-      tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim',
+      tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim',
       infra: 'B1', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
@@ -66,6 +66,8 @@
     if (p.artExecucao === undefined) p.artExecucao = '';
     if (!p.trecho4Modo) p.trecho4Modo = 'individual';
     if (!p.aterramentoExistente) p.aterramentoExistente = 'sim';
+    if (!p.internetCliente) p.internetCliente = 'sim';
+    if (!['TN-S', 'TT'].includes(p.aterramento)) p.aterramento = p.aterramentoExistente === 'nao' ? 'TT' : 'TN-S';
     if (!p.trecho4Duto) p.trecho4Duto = 'eletroduto';
     if (p.trecho4Tamanho === undefined) p.trecho4Tamanho = '';
     if (!p.atualizadoEm) p.atualizadoEm = p.criadoEm || new Date().toISOString();
@@ -574,6 +576,7 @@
         ${campoAv('Curto-circuito presumido no quadro, Ik (kA)', inp('ikPresumida', { type: 'number', step: '0.1' }))}
         ${campoAv('Necessidade de transformador?', sel('transformador', [['nao', 'Não'], ['sim', 'Sim']]))}
         ${campoAv('Aterramento existente no cliente?', sel('aterramentoExistente', [['sim', 'Sim (integrar ao aterramento existente)'], ['nao', 'Não (BeGreen executa aterramento com hastes)']]))}
+        ${campoAv('Esquema de aterramento', sel('aterramento', [['TN-S', 'TN-S (integrado ao aterramento existente)'], ['TT', 'TT (eletrodo próprio, haste exclusiva)']]))}
       </div>
     </div></details>
     ${trafoSim ? `<details data-sec="3"><summary>3 · Transformador</summary><div class="sec-body">
@@ -595,6 +598,7 @@
     <details data-sec="5"><summary>5 · Estações de recarga e circuitos</summary><div class="sec-body">
       ${cartoes}
       ${quadroSim ? '' : '<button type="button" class="btn-sec" id="add-ponto">+ adicionar ponto de recarga</button>'}
+      ${campo('Conexão das estações', sel('internetCliente', [['sim', 'Ponto de internet do cliente (Wi-Fi ou cabo)'], ['nao', 'Não se aplica (4G próprio ou sem conexão)']]))}
     </div></details>
     <details data-sec="6"><summary>6 · Trechos e dimensionamento</summary><div class="sec-body">
       ${trechosHtml}
@@ -773,6 +777,7 @@
     if (chave && e.target.tagName === 'SELECT') {
       aplicarValor(chave, e.target.value);
       if (chave === 'transformador' && e.target.value === 'sim') projeto.quadroDistribuicao = 'sim';
+      if (chave === 'aterramentoExistente') projeto.aterramento = e.target.value === 'nao' ? 'TT' : 'TN-S';
       if (chave === 'quadroDistribuicao' || chave === 'transformador') sincronizarCarregadores();
       salvar();
       renderTudo();

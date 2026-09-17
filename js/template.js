@@ -99,7 +99,10 @@
     const rev = p.revisao || '00';
     const tensaoCfg = `${c.rede.tensao || 220} V · ${p.config || '2F+N+T'} · 60 Hz`;
     const semAterr = p.aterramentoExistente === 'nao';
-    const aterr = semAterr ? 'TT (eletrodo de aterramento próprio, executado pela BeGreen)' : esc(p.aterramento || 'TN-S');
+    const aterrSigla = (p.aterramento === 'TT' || semAterr) ? 'TT' : 'TN-S';
+    const aterr = aterrSigla === 'TT'
+      ? 'TT (eletrodo de aterramento próprio, executado pela BeGreen)'
+      : 'TN-S (integrado ao aterramento existente do cliente)';
     const naoIndica = p.alterarPadrao !== 'sim';
     const algumKit = pts.some(x => x.usaKit);
     const analiseFeita = p.analiseDemanda === 'sim';
@@ -160,7 +163,9 @@
     <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Disjuntor</th><th style="${TH8}">IDR</th><th style="${TH8}">DPS</th></tr></thead>
     <tbody>${linhasProt.map((l, i) => `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${l[0]}</td>${l.slice(2).map(v => `<td style="${TD8};color:${TX1}">${v}</td>`).join('')}</tr>`).join('\n    ')}</tbody>
   </table>`;
-    const passagemTxt = trechosCalc.map(tr => `Trecho ${tr.num}${tr.circuito ? ' (' + tr.d.id + ')' : ''}: método ${tr.d.infra.metodo} (${tr.d.infra.desc})`).join(' · ');
+    const FAMILIA_TXT = { solo: 'enterrada', alvenaria: 'embutida em alvenaria', aparente: 'aparente' };
+    const passagemTxt = trechosCalc.map(tr => `Trecho ${tr.num}${tr.circuito ? ' (' + tr.d.id + ')' : ''}: ${FAMILIA_TXT[tr.d.infra.familia] || tr.d.infra.familia}`).join(' · ');
+    const metodoTxt = trechosCalc.map(tr => `Trecho ${tr.num}${tr.circuito ? ' (' + tr.d.id + ')' : ''}: ${tr.d.infra.metodo}`).join(' · ');
     const ok = (b) => b ? '<span style="color:' + GREEN_D + '">✓</span>' : '<span style="color:#C0392B">✗</span>';
     const cartaoTrecho = (tr) => {
       const d = tr.d;
@@ -297,7 +302,7 @@
       ...(temSolo ? ['Definir, no contrato, quem executa a abertura e a recomposição do piso no trecho enterrado.'] : []),
       ...(semAterr ? ['Liberar o local para a execução do eletrodo de aterramento pela BeGreen.'] : []),
       ...(multi ? ['Definir com o condomínio as vagas que receberão os pontos de recarga e a sinalização.'] : []),
-      'Disponibilizar ponto de internet (Wi-Fi ou cabo) próximo às estações para ativação e monitoramento.',
+      ...(p.internetCliente === 'nao' ? [] : ['Disponibilizar ponto de internet (Wi-Fi ou cabo) próximo às estações para ativação e monitoramento.']),
       'Garantir acesso ao QGBT, à garagem e às vagas na data combinada para a obra.',
     ];
     const barras = (() => {
@@ -401,13 +406,14 @@
     ${trKV('Tensão / frequência da rede', tensaoCfg)}
     ${trKV('Esquema de aterramento', aterr)}
     ${trKV('Forma de passagem', passagemTxt)}
+    ${trKV('Método de referência da instalação (tabela 33)', metodoTxt)}
     ${trKV('Disjuntor geral existente', phn(c.geral, 'A'))}
     ${c.trafo ? trKV('Transformador', `Sim · ${phn(c.trafo.kva, 'kVA')} · primário ${phn(c.trafo.primV, 'V')} ${ph(c.trafo.primLig, '[XX]')} → secundário ${phn(c.trafo.secV, 'V')} ${ph(c.trafo.secLig, '[XX]')} · ${ph(c.trafo.ip, '[IP]')} · disjuntor de alimentação ${phn(c.trafo.disjuntor, 'A')}`) : ''}
     ${c.topologia === 'quadro' ? trKV('QDA (quadro de distribuição das estações de recarga)', `Sim · disjuntor dedicado no QGBT ${c.alimentador ? manual(fmt(c.alimentador) + ' A', c.alimentadorManual) : phn(0, 'A')} · entrada do QDA ${c.qdGeral ? fmt(c.qdGeral, c.qdGeral % 1 ? 1 : 0) + ' A' : phn(0, 'A')} · ${phn(c.qdQuantidade, '')} estação(ões) de recarga`) : ''}
     ${trKV(multi ? 'Potência total das estações' : 'Potência da estação de recarga', phn(c.totalKw, 'kW'))}
     ${trKV('Quantidade de pontos', phn(c.totalKw ? n : 0, ''))}
     ${trKV('Distâncias dos trechos', distTxt)}
-    ${trKV('Temperatura ambiente de projeto', phn(pt.temp, '°C'))}
+    ${trKV('Fator de temperatura (tabela 40, NBR 5410)', `${fmt(pt.fT, 2)} · ${phn(pt.temp, '°C')} ${pt.infra.familia === 'solo' ? 'no solo' : 'ambiente'}`)}
   </tbody></table>
   ${h3('1.2 · Abrangência')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0">Este memorial abrange exclusivamente o circuito terminal dedicado à estação de recarga, desde o ponto de derivação no quadro de origem até o equipamento, incluindo condutores, condutos, dispositivos de proteção, aterramento, sinalização e comissionamento. Não abrange a adequação do padrão de entrada, do ramal de ligação ou de circuitos preexistentes, salvo indicação expressa no item ${NUM.observacoes}.</p>
@@ -419,7 +425,7 @@
       ['ABNT NBR 17019', 'Instalações elétricas de baixa tensão, requisitos para a alimentação de veículos elétricos. Aplicada de forma <strong>complementar</strong> à NBR 5410, em especial quanto a circuito dedicado, IDR e proteções específicas.'],
       ['ABNT NBR 5419', 'Proteção contra descargas atmosféricas. Critério de seleção e classe do DPS.'],
       ['ABNT NBR 15920', 'Cabos elétricos, cálculo da corrente de condução (referência das capacidades e fatores de correção).'],
-      ['IEC 61851', 'Sistema condutivo de recarga de veículos elétricos. Define os modos de recarga; o equipamento deste projeto opera em <strong>Modo 3</strong>.'],
+      ['IEC 61851', `Sistema condutivo de recarga de veículos elétricos. Define os modos de recarga; ${temAC && temDC ? 'os equipamentos deste projeto operam em <strong>Modo 3</strong> (AC) e <strong>Modo 4</strong> (DC)' : (temDC ? 'o equipamento deste projeto opera em <strong>Modo 4</strong>' : 'o equipamento deste projeto opera em <strong>Modo 3</strong>')}.`],
       ['IEC 62196 / Type 2', 'Plugues, tomadas e acopladores para recarga condutiva. Padrão do conector adotado.'],
       ['NR-10', 'Segurança em instalações e serviços em eletricidade. Requisitos para a equipe de execução.'],
       ['Bombeiros', 'Instrução Técnica de inserção de veículos elétricos em edificações. Desligamentos local e geral, sinalização e interligação com o alarme.'],
@@ -964,7 +970,8 @@
       ['BEV', 'veículo elétrico a bateria, tracionado exclusivamente por energia elétrica armazenada.'],
       ['PHEV', 'veículo híbrido plug-in, recarregável pela rede elétrica.'],
       ['EVSE', 'equipamento de alimentação de veículo elétrico; a estação de recarga propriamente dita.'],
-      ['Modo 3', 'recarga em corrente alternada por circuito dedicado, com controle e comunicação permanentes entre estação e veículo (IEC 61851).'],
+      ...(temAC || !temDC ? [['Modo 3', 'recarga em corrente alternada por circuito dedicado, com controle e comunicação permanentes entre estação e veículo (IEC 61851-1).']] : []),
+      ...(temDC ? [['Modo 4', 'recarga em corrente contínua: a conversão CA/CC ocorre na estação, que alimenta a bateria do veículo diretamente (IEC 61851-23).']] : []),
       ['Type 2', 'padrão de conector para recarga condutiva em CA (IEC 62196-2).'],
       ['IDR', 'interruptor diferencial-residual; desliga o circuito ao detectar corrente de fuga.'],
       ['Tipo A', 'classe de IDR sensível a correntes residuais alternadas e pulsantes contínuas.'],
@@ -974,7 +981,7 @@
       ['HEPR', 'isolação de borracha etileno-propileno de alto módulo, temperatura de operação de 90 °C.'],
       ['I<sub>b</sub> · I<sub>n</sub> · I<sub>z</sub>', 'corrente de projeto do circuito · corrente nominal do dispositivo de proteção · capacidade de condução do condutor.'],
       ['I<sub>k</sub>', 'corrente de curto-circuito presumida no ponto considerado.'],
-      ['Linhas tipo D e B1', 'métodos de instalação de referência da tabela 36 da NBR 5410: D para eletroduto enterrado, B1 para eletroduto embutido em alvenaria ou aparente.'],
+      ['Método de referência', 'forma de instalação da linha elétrica (tabela 33 da NBR 5410), que define a capacidade de condução de corrente do cabo: A1 e A2 em parede termicamente isolante, B1 e B2 em eletroduto, C sobre parede ou bandeja, D enterrado, E, F e G ao ar livre.'],
       ['Balanceamento de carga', 'distribuição dinâmica da potência disponível entre as estações ativas.'],
       ['OCPP', 'protocolo aberto de comunicação entre estações de recarga e plataforma de gestão.'],
       ['ART', 'Anotação de Responsabilidade Técnica registrada no CREA.'],
