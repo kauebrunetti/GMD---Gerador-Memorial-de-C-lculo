@@ -40,8 +40,8 @@ Desde a migração `0002_auth.sql` o acesso exige **e-mail + senha** e o e-mail 
 - **Esqueci a senha:** link por e-mail; abre o app em modo "Nova senha".
 
 Configuração necessária no painel (uma vez), em *Authentication → URL Configuration*:
-- **Site URL:** `https://bg-gmd.vercel.app`
-- **Redirect URLs:** `https://bg-gmd.vercel.app/**` e `http://localhost:4620/**`
+- **Site URL:** `https://gmd.mybegreen.com.br`
+- **Redirect URLs:** `https://gmd.mybegreen.com.br/**` e `http://localhost:4620/**`
 
 Em *Authentication → Providers → Email* mantenha **Enable Email provider** ligado e *Allow new users to sign up* ligado: o cadastro é controlado pela lista de autorizados, não pela opção do painel. O envio de e-mails usa o SMTP padrão do Supabase (limite baixo, da ordem de poucos e-mails por hora); para uma equipe maior, configure SMTP próprio em *Authentication → SMTP Settings*.
 

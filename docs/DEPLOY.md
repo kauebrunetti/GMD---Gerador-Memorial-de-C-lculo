@@ -71,7 +71,7 @@ Endereço escolhido: **https://gmd.mybegreen.com.br**
 3. Aguarde a propagação (minutos a algumas horas). Na Vercel o domínio fica "Valid Configuration" e o certificado HTTPS é emitido sozinho.
 4. No Supabase (**Authentication → URL Configuration**) adicione `https://gmd.mybegreen.com.br` em *Site URL* e `https://gmd.mybegreen.com.br/**` em *Redirect URLs*, senão os e-mails de primeiro acesso / senha continuam levando ao endereço antigo.
 
-O endereço `https://bg-gmd.vercel.app` continua funcionando em paralelo.
+O endereço `https://bg-gmd.vercel.app` continua funcionando em paralelo. Domínio ativo desde 17/09/2026.
 
 ## 5 · Atualizações no dia a dia
 
