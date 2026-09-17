@@ -252,16 +252,22 @@
         if (loc && (loc.atualizadoEm || '') > (rem.atualizadoEm || '')) { mesclados.push(loc); enviarProjeto(loc); }
         else mesclados.push(rem);
       });
-      projetos.forEach(loc => { if (!vistos.has(loc.id) && temConteudo(loc)) { mesclados.push(loc); enviarProjeto(loc); } });
-      if (mesclados.length) {
+      const resetEm = (cfg || []).find(r => r.chave === 'reset_em');
+      const marco = resetEm && typeof resetEm.valor === 'string' ? resetEm.valor : '';
+      projetos.forEach(loc => {
+        if (vistos.has(loc.id) || !temConteudo(loc)) return;
+        if (marco && (loc.atualizadoEm || '') < marco) return; // base zerada: cache antigo é descartado
+        mesclados.push(loc); enviarProjeto(loc);
+      });
+      {
         const idAtual = projeto.id;
         projetos = mesclados.sort((a, b) => (a.atualizadoEm || '').localeCompare(b.atualizadoEm || ''));
+        if (!projetos.length) projetos.push(novoProjeto());
         projeto = projetos.find(x => x.id === idAtual) || projetos[projetos.length - 1];
         try { guardarCache(); } catch (e) { /* ignora */ }
       }
       // Modelos (oficiais primeiro); cria os oficiais na primeira vez
       modelos = (mods || []).map(m => ({ id: m.id, nome: m.nome, dados: m.dados, oficial: !!m.oficial, ordem: m.ordem }));
-      if (!modelos.some(m => m.oficial)) await criarModelosOficiais();
       gravarLS(LS_MODELOS, modelos);
       // Configurações
       const mapa = {}; (cfg || []).forEach(r => { mapa[r.chave] = r.valor; });
@@ -1240,7 +1246,7 @@
     abrirModal('Equipe · quem pode usar o gerador', '<p style="color:var(--g1)">Carregando…</p>');
     let lista = [];
     try { lista = await window.Sync.listarUsuarios(); } catch (e) { abrirModal('Equipe', `<p class="login-msg erro">Não foi possível carregar: ${esc(e.message)}</p>`); return; }
-    const linhas = lista.map(u => `<tr><td>${esc(u.email)}</td><td>${esc(u.nome)}</td><td>${u.papel === 'admin' ? 'Administrador' : 'Projetista'}</td><td>${u.ativo ? '<span style="color:var(--green-d);font-weight:600">ativo</span>' : '<span style="color:var(--g2)">inativo</span>'}</td><td style="white-space:nowrap"><button type="button" class="btn-mini" data-eq-toggle="${esc(u.email)}">${u.ativo ? 'desativar' : 'ativar'}</button> <button type="button" class="btn-mini" data-eq-papel="${esc(u.email)}" title="Alternar entre projetista e administrador">${u.papel === 'admin' ? 'tornar projetista' : 'tornar admin'}</button> ${u.email.toLowerCase() !== (usuarioAtual.email || '').toLowerCase() ? `<button type="button" class="btn-mini" data-eq-rm="${esc(u.email)}">×</button>` : ''}</td></tr>`).join('');
+    const linhas = lista.map(u => `<tr><td>${esc(u.email)}</td><td>${esc(u.nome)}</td><td>${({ admin: 'Administrador', lider: 'Líder', projetista: 'Projetista' }[u.papel] || u.papel)}</td><td>${u.ativo ? '<span style="color:var(--green-d);font-weight:600">ativo</span>' : '<span style="color:var(--g2)">inativo</span>'}</td><td style="white-space:nowrap"><button type="button" class="btn-mini" data-eq-toggle="${esc(u.email)}">${u.ativo ? 'desativar' : 'ativar'}</button> <select class="eq-papel-sel" data-eq-papel="${esc(u.email)}" title="Papel na ferramenta">${['projetista', 'lider', 'admin'].map(v => `<option value="${v}"${u.papel === v ? ' selected' : ''}>${{ projetista: 'Projetista', lider: 'Líder', admin: 'Administrador' }[v]}</option>`).join('')}</select> ${u.email.toLowerCase() !== (usuarioAtual.email || '').toLowerCase() ? `<button type="button" class="btn-mini" data-eq-rm="${esc(u.email)}">×</button>` : ''}</td></tr>`).join('');
     abrirModal('Equipe · quem pode usar o gerador', `
       <p style="margin:0 0 10px;color:var(--g1)">Cadastre o e-mail de cada pessoa. Ela cria a própria senha em <strong>Primeiro acesso</strong> na tela de entrada. Desativar bloqueia o acesso na hora.</p>
       <table class="tab"><thead><tr><th>E-mail</th><th>Nome</th><th>Papel</th><th>Situação</th><th></th></tr></thead><tbody>${linhas || '<tr><td colspan="5">Ninguém cadastrado.</td></tr>'}</tbody></table>
@@ -1248,7 +1254,7 @@
       <div style="display:grid;grid-template-columns:1.3fr 1fr auto auto;gap:8px;align-items:end">
         <label class="campo"><span class="campo-label">E-mail</span><input type="email" id="eq-email" autocomplete="off" /></label>
         <label class="campo"><span class="campo-label">Nome</span><input type="text" id="eq-nome" autocomplete="off" /></label>
-        <label class="campo"><span class="campo-label">Papel</span><select id="eq-papel"><option value="projetista">Projetista</option><option value="admin">Administrador</option></select></label>
+        <label class="campo"><span class="campo-label">Papel</span><select id="eq-papel"><option value="projetista">Projetista</option><option value="lider">Líder</option><option value="admin">Administrador</option></select></label>
         <button type="button" class="btn primario" id="eq-add" style="padding:8px 14px">Adicionar</button>
       </div>`);
   }
@@ -1267,10 +1273,6 @@
         const lista = await window.Sync.listarUsuarios();
         const u = lista.find(x => x.email === t.dataset.eqToggle);
         if (u) { await window.Sync.salvarUsuario({ email: u.email, nome: u.nome, papel: u.papel, ativo: !u.ativo }); abrirEquipe(); }
-      } else if (t.dataset.eqPapel) {
-        const lista = await window.Sync.listarUsuarios();
-        const u = lista.find(x => x.email === t.dataset.eqPapel);
-        if (u) { await window.Sync.salvarUsuario({ email: u.email, nome: u.nome, papel: u.papel === 'admin' ? 'projetista' : 'admin', ativo: u.ativo }); abrirEquipe(); }
       } else if (t.dataset.eqRm) {
         if (!confirm(`Remover ${t.dataset.eqRm} da equipe? A pessoa perde o acesso na hora.`)) return;
         await window.Sync.excluirUsuario(t.dataset.eqRm);
@@ -1313,30 +1315,6 @@
       setStatus('Catálogo salvo e compartilhado com o time.');
     }
   });
-
-  // ── Modelos oficiais BeGreen (criados uma vez na nuvem) ───
-  function modeloOficial(nome, ordem, ajustes) {
-    const p = novoProjeto();
-    p.docNum = 'BG-ME-XX-XXXX'; p.gestor = '';
-    Object.assign(p, ajustes.projeto || {});
-    p.carregadores = Array.from({ length: ajustes.n || 1 }, () => Object.assign(novoCarregador(), ajustes.carregador || {}));
-    if (ajustes.n > 1) { p.quadroDistribuicao = 'sim'; p.qdQuantidade = String(ajustes.n); }
-    return { id: 'oficial-' + ordem, nome, dados: p, oficial: true, ordem };
-  }
-  async function criarModelosOficiais() {
-    const lista = [
-      modeloOficial('Residencial · 1 × 7,4 kW · 220 V 2F+N+T · sem QDA', 1, { n: 1, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
-      modeloOficial('Condomínio · 2 × 7,4 kW · 220 V 2F+N+T · QDA', 2, { n: 2, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
-      modeloOficial('Condomínio · 4 × 7,4 kW · 220 V 2F+N+T · QDA · circuitos agrupados', 3, { n: 4, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', trecho4Modo: 'agrupado', trecho4Duto: 'eletrocalha' } }),
-      modeloOficial('Condomínio · 2 × 22 kW · 380 V 3F+N+T · QDA', 4, { n: 2, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 380, config: '3F+N+T' } }),
-      modeloOficial('Empresa · 1 × 22 kW · 220 V com transformador 220/380 V', 5, { n: 1, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', transformador: 'sim', quadroDistribuicao: 'sim', qdQuantidade: '1', trafoPrimV: '220', trafoPrimLig: '2F+T', trafoSecV: '380', trafoSecLig: '3F+N+T', trafoIp: 'IP21' } }),
-      modeloOficial('Frota · 1 × 60 kW DC · 380 V 3F+N+T · QDA', 6, { n: 1, carregador: { potencia: '60', conector: 'CCS 2', infra: 'D', modelo: 'Estação DC 60 kW · CCS 2' }, projeto: { tensao: 380, config: '3F+N+T', quadroDistribuicao: 'sim', qdQuantidade: '1' } }),
-    ];
-    for (const m of lista) {
-      try { await window.Sync.salvarModelo({ id: m.id, nome: m.nome, dados: m.dados, oficial: true, ordem: m.ordem, gestor: 'BeGreen' }); } catch (e) { nuvemOk(false, e); return; }
-    }
-    modelos = lista.concat(modelos.filter(x => !x.oficial));
-  }
 
   // ── Métricas ──────────────────────────────────────────────
   function inicioSemana(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
@@ -1488,13 +1466,15 @@
   // Menu "Novo": em branco ou a partir de um modelo
   const $painelNovo = document.getElementById('painel-novo');
   function renderMenuNovo() {
-    $painelNovo.innerHTML = `<div class="menu-titulo">Projeto</div>
-      <div class="menu-item" data-acao="branco"><span class="nome">Novo em branco</span></div>
-      <div class="menu-item destaque" data-acao="modelos"><span class="nome">Novo a partir de um modelo…</span><span class="menu-tag">${modelos.length}</span></div>
+    $painelNovo.innerHTML = `<div class="menu-principal">
+        <button type="button" class="btn primario menu-btn" data-acao="branco">+ Novo projeto em branco</button>
+        <button type="button" class="btn menu-btn" data-acao="modelos">Novo a partir de um modelo${modelos.length ? ` (${modelos.length})` : ''}</button>
+      </div>
+      <div class="menu-titulo">Projeto atual</div>
       <div class="menu-item" data-acao="duplicar"><span class="nome">Duplicar este projeto</span></div>
       <div class="menu-item" data-acao="baixar"><span class="nome">Baixar HTML</span></div>
       <div class="menu-titulo">Biblioteca do time</div>
-      <div class="menu-item" data-acao="salvar-modelo"><span class="nome">Salvar o projeto atual como modelo…</span></div>
+      ${podeModelo() ? '<div class="menu-item" data-acao="salvar-modelo"><span class="nome">Salvar o projeto atual como modelo…</span></div>' : ''}
       <div class="menu-item" data-acao="catalogo"><span class="nome">Catálogo de equipamentos…</span></div>
       <div class="menu-titulo">Time</div>
       <div class="menu-item" data-acao="metricas"><span class="nome">Métricas</span></div>
@@ -1528,14 +1508,18 @@
     if (q && !total) return `<div class="mod-vazio">Nenhum modelo encontrado para "${esc(modelosFiltro)}".</div>`;
     return grupos.map(([titulo, lista, vazio]) => `<div class="mod-grupo">${titulo}<span>${lista.length}</span></div>`
       + (lista.length ? lista.map(m => `<div class="mod-item" data-modelo="${m.id}">
+          <button type="button" class="mod-usar" data-usar="${m.id}">Usar</button>
+          ${podeModelo() ? `<button type="button" class="mod-excluir" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>` : ''}
           <div class="mod-info"><div class="mod-nome">${esc(m.nome)}</div><div class="mod-det">${resumoModelo(m)}</div></div>
           ${m.oficial ? '<span class="menu-tag">oficial</span>' : ''}
-          ${(!m.oficial || (usuarioAtual && usuarioAtual.papel === 'admin')) ? `<button type="button" class="btn-mini" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>` : ''}
-          <button type="button" class="btn-mini usar" data-usar="${m.id}">usar</button>
         </div>`).join('') : `<div class="mod-vazio">${q ? 'Nenhum resultado neste grupo.' : vazio}</div>`)).join('');
   }
+  // Modelos de projeto são mantidos por líderes e administradores
+  const podeModelo = () => !!(usuarioAtual && ['admin', 'lider'].includes(usuarioAtual.papel));
+
   // Cria um modelo a partir do projeto aberto (sem cliente, fotos e ART)
   function salvarComoModelo() {
+    if (!podeModelo()) { alert('Somente líderes e administradores criam modelos de projeto.'); return null; }
     const cg = projeto.carregadores[0] || {};
     const sugestao = `${projeto.carregadores.length} × ${cg.potencia || '?'} kW · ${projeto.tensao} V ${projeto.config}${projeto.transformador === 'sim' ? ' · com transformador' : ''}${projeto.quadroDistribuicao === 'sim' ? ' · QDA' : ''}`;
     const nome = prompt('Nome do modelo (como vai aparecer na biblioteca):', sugestao);
@@ -1554,8 +1538,8 @@
     abrirModal('Modelos de projeto', `
       <input type="search" id="mod-busca" class="mod-busca" placeholder="Buscar modelo: nome, potência, tensão, QDA…" value="${esc(modelosFiltro)}" autocomplete="off" />
       <div id="mod-lista" class="mod-lista">${listaModelosHtml()}</div>
-      <div class="mod-acoes"><button type="button" class="btn primario" id="mod-novo">+ Salvar o projeto atual como modelo</button></div>
-      <p class="mod-rodape">Um modelo cria um projeto novo com os mesmos parâmetros, sem cliente, fotos e ART. Os oficiais são mantidos pela BeGreen e não podem ser excluídos.</p>`);
+      ${podeModelo() ? '<div class="mod-acoes"><button type="button" class="btn primario" id="mod-novo">+ Salvar o projeto atual como modelo</button></div>' : ''}
+      <p class="mod-rodape">Um modelo cria um projeto novo com os mesmos parâmetros, sem cliente, fotos e ART. ${podeModelo() ? 'Como líder ou administrador, você pode criar e excluir modelos para todo o time.' : 'Criar e excluir modelos é função de líderes e administradores.'}</p>`);
     const b = document.getElementById('mod-busca');
     if (b) b.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Enter') return;
@@ -1572,6 +1556,15 @@
   document.getElementById('modal-corpo').addEventListener('input', (e) => {
     if (e.target.id === 'mod-busca') { modelosFiltro = e.target.value; atualizarListaModelos(); }
   });
+  document.getElementById('modal-corpo').addEventListener('change', async (e) => {
+    const sel = e.target.closest('[data-eq-papel]');
+    if (!sel) return;
+    try {
+      const lista = await window.Sync.listarUsuarios();
+      const u = lista.find(x => x.email === sel.dataset.eqPapel);
+      if (u) { await window.Sync.salvarUsuario({ email: u.email, nome: u.nome, papel: sel.value, ativo: u.ativo }); abrirEquipe(); }
+    } catch (err) { alert('Não foi possível mudar o papel: ' + err.message); }
+  });
   document.getElementById('modal-corpo').addEventListener('click', (e) => {
     if (e.target.id === 'mod-novo') {
       const m = salvarComoModelo();
@@ -1580,6 +1573,7 @@
     }
     const ex = e.target.closest('[data-excluir-modelo]');
     if (ex) {
+      if (!podeModelo()) { alert('Somente líderes e administradores excluem modelos.'); return; }
       const m = modelos.find(x => x.id === ex.dataset.excluirModelo);
       if (!confirm(`Excluir o modelo "${m ? m.nome : ''}"? Ele deixa de aparecer para todo o time.`)) return;
       modelos = modelos.filter(x => x.id !== ex.dataset.excluirModelo);
@@ -1597,6 +1591,15 @@
     registrarNovo(clonarProjeto(m.dados, true), true, 'modelo: ' + m.nome);
     setStatus(`Projeto criado a partir do modelo "${m.nome}".`);
   });
+  function posicionarMenu() {
+    const btn = document.getElementById('btn-novo');
+    const r = btn.getBoundingClientRect();
+    const larg = Math.min(330, window.innerWidth - 24);
+    $painelNovo.style.width = larg + 'px';
+    $painelNovo.style.left = Math.max(12, Math.min(r.left, window.innerWidth - larg - 12)) + 'px';
+    $painelNovo.style.top = (r.bottom + 6) + 'px';
+    $painelNovo.style.maxHeight = Math.max(200, window.innerHeight - r.bottom - 24) + 'px';
+  }
   document.getElementById('btn-novo').addEventListener('click', (e) => {
     e.stopPropagation();
     const aberto = $painelNovo.style.display !== 'none';
@@ -1604,7 +1607,9 @@
     if (aberto) { $painelNovo.style.display = 'none'; return; }
     renderMenuNovo();
     $painelNovo.style.display = 'block';
+    posicionarMenu();
   });
+  window.addEventListener('resize', () => { if ($painelNovo.style.display !== 'none') posicionarMenu(); });
   $painelNovo.addEventListener('click', (e) => {
     const ex = e.target.closest('[data-excluir-modelo]');
     if (ex) {
@@ -1614,7 +1619,7 @@
       if (nuvemAtiva()) window.Sync.excluirModelo(ex.dataset.excluirModelo).catch(e => nuvemOk(false, e));
       return;
     }
-    const item = e.target.closest('.menu-item');
+    const item = e.target.closest('.menu-item, .menu-btn');
     if (!item) return;
     $painelNovo.style.display = 'none';
     if (item.dataset.acao === 'branco') {

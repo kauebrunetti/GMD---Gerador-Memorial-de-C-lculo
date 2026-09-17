@@ -17,3 +17,6 @@ node_modules/
 # Variáveis locais, se um dia existirem
 .env
 .env.*
+
+# Backups locais da base (contêm dados de clientes)
+backups/
