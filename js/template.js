@@ -83,6 +83,9 @@
   // Folhas do documento — p = formulário · c = Calc.calcularProjeto(p)
   // extras = { } (reservado)
   // ══════════════════════════════════════════════════════════
+  // Responsável técnico que aprova o documento
+  const RESPONSAVEL = 'Eng. Kauê B. Angeli';
+
   function folhas(p, c, extras) {
     extras = extras || {};
     const pts = c.pontos;
@@ -252,9 +255,19 @@
 
     // ══ CONTROLE DO DOCUMENTO ══
     // Histórico de revisões: as anteriores (guardadas ao emitir nova revisão) + a atual
-    const revLinhas = (p.historicoRevisoes || []).map(h => ({ rev: h.revisao, data: h.dataRevisao, desc: h.descricao || (h.revisao === '00' ? 'Emissão inicial' : 'Revisão do documento') }));
-    revLinhas.push({ rev, data: p.dataRevisao, desc: (p.descricaoRevisao && p.descricaoRevisao.trim()) || (rev === '00' ? 'Emissão inicial' : 'Revisão do documento') });
-    const revRows = revLinhas.map(l => `<tr><td style="${TD}">${esc(l.rev)}</td><td style="${TD}">${dataBr(l.data)}</td><td style="${TD}">${esc(l.desc)}</td><td style="${TD}">Eng. Kauê B. Angeli</td><td style="${TD}">BeGreen Mobilidade Elétrica</td></tr>`).join('')
+    // Elaborado: quem preencheu o memorial · Aprovado: o responsável técnico
+    const elaborador = (l) => (l && String(l).trim()) ? esc(String(l).trim()) : `<span style="color:${G2}">[XX]</span>`;
+    const revLinhas = (p.historicoRevisoes || []).map(h => ({
+      rev: h.revisao, data: h.dataRevisao,
+      desc: h.descricao || (h.revisao === '00' ? 'Emissão inicial' : 'Revisão do documento'),
+      por: h.gestor || (h.snapshot && h.snapshot.gestor) || p.gestor,
+    }));
+    revLinhas.push({
+      rev, data: p.dataRevisao,
+      desc: (p.descricaoRevisao && p.descricaoRevisao.trim()) || (rev === '00' ? 'Emissão inicial' : 'Revisão do documento'),
+      por: p.gestor,
+    });
+    const revRows = revLinhas.map(l => `<tr><td style="${TD}">${esc(l.rev)}</td><td style="${TD}">${dataBr(l.data)}</td><td style="${TD}">${esc(l.desc)}</td><td style="${TD}">${elaborador(l.por)}</td><td style="${TD}">${RESPONSAVEL}</td></tr>`).join('')
       + Array.from({ length: Math.max(0, 3 - revLinhas.length) }, (_, i) => {
         const r = String(Number(rev) + i + 1).padStart(2, '0');
         return `<tr><td style="${TD};color:${G3}">${r}</td><td style="${TD};color:${G3}">—</td><td style="${TD};color:${G3}">—</td><td style="${TD};color:${G3}">—</td><td style="${TD};color:${G3}">—</td></tr>`;

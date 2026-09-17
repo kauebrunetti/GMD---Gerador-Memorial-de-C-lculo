@@ -136,6 +136,7 @@
   let salvarTimer = null;
   function salvar() {
     projeto.atualizadoEm = new Date().toISOString();
+    if (!(projeto.gestor || '').trim()) projeto.gestor = gestorAtual(); // quem elabora entra no controle do documento
     clearTimeout(salvarTimer);
     salvarTimer = setTimeout(() => {
       try {
@@ -933,7 +934,7 @@
     delete snap.historicoRevisoes;
     snap.fotos = [];
     projeto.historicoRevisoes.push({
-      revisao: projeto.revisao, dataRevisao: projeto.dataRevisao,
+      revisao: projeto.revisao, dataRevisao: projeto.dataRevisao, gestor: projeto.gestor || gestorAtual(),
       descricao: (projeto.descricaoRevisao && projeto.descricaoRevisao.trim()) || (projeto.revisao === '00' ? 'Emissão inicial' : 'Revisão do documento'),
       emitidoEm: new Date().toISOString(), snapshot: snap,
     });
