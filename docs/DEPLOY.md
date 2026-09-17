@@ -58,7 +58,20 @@ A partir daqui, todo `git push` na `main` publica uma nova versão. Cada *pull r
 
 ## 4 · Subdomínio da BeGreen (opcional)
 
-Na Vercel: **Project → Settings → Domains → Add** → `gmd.mybegreen.com.br`. A Vercel mostra o registro DNS a criar no provedor do domínio (normalmente um `CNAME` apontando para `cname.vercel-dns.com`). Depois de propagar, o link passa a ser `https://gmd.mybegreen.com.br` com certificado HTTPS automático.
+Endereço escolhido: **https://gmd.mybegreen.com.br**
+
+1. Na Vercel: projeto **bg-gmd → Settings → Domains → Add** → digite `gmd.mybegreen.com.br` → Add. A Vercel passa a exibir o domínio como "Invalid configuration" até o DNS existir.
+2. No provedor de DNS do `mybegreen.com.br` (Registro.br, Cloudflare, GoDaddy…), crie o registro:
+
+   | Tipo  | Nome / Host | Valor / Destino          | TTL      |
+   |-------|-------------|--------------------------|----------|
+   | CNAME | `gmd`       | `cname.vercel-dns.com`   | 3600 (ou automático) |
+
+   Alguns painéis pedem o nome completo (`gmd.mybegreen.com.br`) e o destino com ponto final (`cname.vercel-dns.com.`); ambos são equivalentes.
+3. Aguarde a propagação (minutos a algumas horas). Na Vercel o domínio fica "Valid Configuration" e o certificado HTTPS é emitido sozinho.
+4. No Supabase (**Authentication → URL Configuration**) adicione `https://gmd.mybegreen.com.br` em *Site URL* e `https://gmd.mybegreen.com.br/**` em *Redirect URLs*, senão os e-mails de primeiro acesso / senha continuam levando ao endereço antigo.
+
+O endereço `https://bg-gmd.vercel.app` continua funcionando em paralelo.
 
 ## 5 · Atualizações no dia a dia
 
