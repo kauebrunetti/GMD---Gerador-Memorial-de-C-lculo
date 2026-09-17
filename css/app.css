@@ -228,11 +228,12 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 /* O vidro é um irmão absoluto (não um ancestral): assim o desfoque não vira "containing block" das listas fixas (combo) */
 .painel-vidro {
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  -webkit-backdrop-filter: blur(34px) saturate(170%) brightness(1.08); backdrop-filter: blur(34px) saturate(170%) brightness(1.08);
+  /* vidro transparente: pouco leite, desfoque médio, brilho só nas bordas */
+  -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
   background:
-    linear-gradient(118deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .14) 26%, rgba(255, 255, 255, 0) 44%, rgba(255, 255, 255, .04) 64%, rgba(255, 255, 255, .34) 100%),
-    rgba(255, 255, 255, .42);
-  border: 1px solid rgba(255, 255, 255, .6);
+    linear-gradient(118deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .08) 24%, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, .02) 66%, rgba(255, 255, 255, .22) 100%),
+    rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .7);
   /* borda-luz e "lente": claro em cima/esquerda, sombra fina embaixo/direita */
   box-shadow:
     inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .5),
@@ -305,9 +306,10 @@ details.mais::after {
 .etapa-pt.atual { background: var(--ink); }
 .etapas-rot {
   display: flex; justify-content: space-between; margin-top: 8px;
-  font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--g2);
+  font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tx2);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
 }
-.etapas-pend { color: var(--g2); }
+.etapas-pend { color: var(--tx2); }
 .etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; margin-top: auto; }
 .etapa-btn {
   flex: 1; font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500;
