@@ -527,7 +527,7 @@
   </table>
   ${h3('4.1 · Premissas adotadas')}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    ${prem('Condutores', `Cobre, isolação HEPR 90 °C para 1 kV, não propagante de chama. A capacidade de condução de corrente segue o <strong>método de referência</strong> adotado em cada trecho (tabela 33 da ABNT NBR 5410): ${metodosUsados}.`)}
+    ${prem('Condutores', `Cobre, isolação HEPR 90 °C para <strong>1 kV</strong>, não propagante de chama. A capacidade de condução de corrente é a das <strong>tabelas 37 e 39</strong> da ABNT NBR 5410 (condutores de 1 kV, isolação EPR/XLPE; a tabela 36 aplica-se a condutores de 750 V), conforme o <strong>método de referência</strong> da tabela 33 adotado em cada trecho: ${metodosUsados}.`)}
     ${prem('Correções', `Fator de temperatura conforme tabela 40 (temperatura do solo, referência 20 °C, para trechos enterrados; temperatura ambiente, referência 30 °C, para os demais); fator de agrupamento conforme tabela 42, quando aplicável. O resultado corrigido é o valor comparado à corrente de projeto.`)}
     ${prem('Margem de projeto', 'Aplica-se uma margem de segurança sobre a corrente nominal no dimensionamento do dispositivo de proteção, que cobre o regime contínuo e a elevação de temperatura no quadro.')}
     ${prem('Recomendação do fabricante', 'Quando a especificação do fabricante do equipamento for mais restritiva que o resultado do cálculo, adota-se a seção do fabricante.')}
