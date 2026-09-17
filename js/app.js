@@ -10,7 +10,7 @@
 
   // ── Estado ─────────────────────────────────────────────────
   function novoCarregador() {
-    return { potencia: '', infra: 'solo', modelo: '', conector: '', cabo: '', distancia: '', temperatura: '', incluirKit: false, secaoManual: '', disjuntorManual: '', idrManual: '', eletrodutoManual: '' };
+    return { potencia: '', infra: 'solo', marca: '', modelo: '', conector: '', cabo: '', distancia: '', temperatura: '', incluirKit: false, secaoManual: '', disjuntorManual: '', idrManual: '', eletrodutoManual: '' };
   }
   function novoProjeto() {
     return {
@@ -56,7 +56,7 @@
     });
     if (p.qdCorrente && !p.trechos.t1.I) p.trechos.t1.I = p.qdCorrente;
     if (p.trafoDisjuntor && !p.trechos.t2.I) p.trechos.t2.I = p.trafoDisjuntor;
-    (p.carregadores || []).forEach(cg => { if (!cg.infra) cg.infra = p.infra || 'solo'; });
+    (p.carregadores || []).forEach(cg => { if (!cg.infra) cg.infra = p.infra || 'solo'; if (cg.marca === undefined) cg.marca = ''; });
     if (!p.analiseDemanda) p.analiseDemanda = (p.potenciaDisponivel || p.pontosSimultaneos) ? 'sim' : 'nao';
     if (p.artExecucao === undefined) p.artExecucao = '';
     if (!p.trecho4Modo) p.trecho4Modo = 'individual';
@@ -307,11 +307,20 @@
 
   // Catálogo de equipamentos BeGreen (escolher o modelo preenche potência e conector)
   const CATALOGO_PADRAO = [
-    { nome: 'Wallbox AC 7,4 kW · Tipo 2', potencia: 7.4, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
-    { nome: 'Wallbox AC 11 kW · Tipo 2', potencia: 11, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
-    { nome: 'Wallbox AC 22 kW · Tipo 2', potencia: 22, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
-    { nome: 'Estação DC 30 kW · CCS 2', potencia: 30, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
-    { nome: 'Estação DC 60 kW · CCS 2', potencia: 60, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Wallbox AC 7,4 kW · Tipo 2', marca: '', potencia: 7.4, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
+    { nome: 'Wallbox AC 11 kW · Tipo 2', marca: '', potencia: 11, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
+    { nome: 'Wallbox AC 22 kW · Tipo 2', marca: '', potencia: 22, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' },
+    { nome: 'Estação DC 30 kW · CCS 2', marca: '', potencia: 30, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 40 kW · CCS 2', marca: '', potencia: 40, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 60 kW · CCS 2', marca: '', potencia: 60, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 80 kW · CCS 2', marca: '', potencia: 80, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 90 kW · CCS 2', marca: '', potencia: 90, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 100 kW · CCS 2', marca: '', potencia: 100, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 120 kW · CCS 2', marca: '', potencia: 120, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 150 kW · CCS 2', marca: '', potencia: 150, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 180 kW · CCS 2', marca: '', potencia: 180, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 240 kW · CCS 2', marca: '', potencia: 240, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
+    { nome: 'Estação DC 360 kW · CCS 2', marca: '', potencia: 360, conector: 'CCS 2', tipo: 'DC', ip: 'IP54' },
   ];
   let catalogo = lerLS('begreen-catalogo', null) || CATALOGO_PADRAO.slice();
   let gestores = lerLS('begreen-gestores', []);
@@ -336,8 +345,18 @@
     const q = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     return `<select data-chave="${chave}">${opcoes.map(([val, lbl]) => `<option value="${q(val)}"${String(v) === String(val) ? ' selected' : ''}>${q(lbl)}</option>`).join('')}</select>`;
   }
-  function resumoPontoHtml(pt) {
-    return `I<sub>b</sub> = <strong>${fmt(pt.Ib, 1)} A</strong> · ${pt.lig.rotulo} · seção ${pt.secao ? `<strong>${fmt(pt.secao)} mm²</strong>` : '—'} · disjuntor <strong>${fmt(pt.disjuntor)} A ${pt.lig.polos}</strong> · ${pt.usaKit ? `IDR <strong>${fmt(pt.idr)} A</strong>` : 'sem kit de proteção'} · ΔV ${pt.quedaPct ? `<strong${pt.quedaOk ? '' : ' class="ruim"'}>${fmt(pt.quedaPct, 2)} %</strong>` : '—'}`;
+  // Características da carga em texto corrido: marca, modelo, tensão, corrente, potência e FP
+  function caracteristicasHtml(cg, pt) {
+    const falta = (t) => `<span class="falta">${t}</span>`;
+    const lig = pt && pt.lig ? pt.lig.rotulo.split('·').slice(1).join('·').trim() : '';
+    return [
+      (cg.marca || '').trim() ? esc(cg.marca.trim()) : falta('marca'),
+      (cg.modelo || '').trim() ? esc(cg.modelo.trim()) : falta('modelo'),
+      pt && pt.Ib ? `<strong>${pt.V} V</strong> ${lig}` : falta('tensão'),
+      pt && pt.Ib ? `<strong>${fmt(pt.Ib, 1)} A</strong>` : falta('corrente'),
+      pt && pt.P ? `<strong>${fmt(pt.P)} kW</strong>` : falta('potência'),
+      `FP <strong>${fmt(window.Calc.FP, 2)}</strong>`,
+    ].join(' · ');
   }
   function participacaoHtml(c) {
     return `Participação da nova carga: <strong>${fmt(c.participacao, 1)} %</strong> da capacidade instalada (${fmt(c.correnteEntrada, 1)} A / ${fmt(c.geral)} A)`;
@@ -375,19 +394,20 @@
       const kitHtml = kitOpcional
         ? `<label class="campo campo-check"><input type="checkbox" data-chave="carregadores.${i}.incluirKit"${cg.incluirKit ? ' checked' : ''} /> <span>Incluir kit de proteção (opcional de ${fmt(window.Calc.KIT_OBRIGATORIO_KW)} a ${fmt(window.Calc.KIT_LIMITE_KW)} kW)</span></label>`
         : '';
-      const opcoesCat = [['', '— escolher do catálogo —']].concat(catalogo.map((e, k) => [String(k), e.nome]));
-      const idxCat = catalogo.findIndex(e => e.nome === cg.modelo);
       return `<div class="ponto" data-i="${i}">
         <div class="ponto-head"><span class="ponto-id">C-EV-${String(i + 1).padStart(2, '0')}</span>
           <span>${i === 0 && multi ? `<button type="button" class="btn-mini" id="aplicar-restante" title="Copia modelo, potência, conector, distância, forma de passagem e kit deste ponto para todos os outros">aplicar ao restante</button> ` : ''}${multi && !quadroSim ? `<button type="button" class="btn-mini rm-ponto" data-i="${i}">remover</button>` : ''}</span></div>
-        ${campo('Modelo (catálogo BeGreen)', `<select data-catalogo="${i}">${opcoesCat.map(([v, l]) => `<option value="${v}"${String(idxCat) === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`)}
+        <div class="grid2">
+          ${campo('Marca', inp(`carregadores.${i}.marca`).replace('<input ', '<input list="lista-marcas" autocomplete="off" '))}
+          ${campo('Modelo', inp(`carregadores.${i}.modelo`).replace('<input ', '<input list="lista-catalogo" autocomplete="off" '))}
+        </div>
         <div class="grid3">
           ${campo('Potência (kW)', sel(`carregadores.${i}.potencia`, [['', '—']].concat(window.Calc.POTENCIAS.map(p => [p, fmt(p) + ' kW']))))}
           ${campo('Conector', sel(`carregadores.${i}.conector`, [['', '—']].concat(window.Calc.CONECTORES.map(k => [k, k]))))}
           ${campoAv('Disjuntor (A)', inp(`carregadores.${i}.disjuntorManual`, { type: 'number', step: '1' }))}
         </div>
         ${kitHtml}
-        ${pt && pt.Ib ? `<div class="calc-resumo">${resumoPontoHtml(pt)}</div>` : ''}
+        <div class="carga-info">${caracteristicasHtml(cg, pt)}</div>
       </div>`;
     }).join('');
 
@@ -503,6 +523,7 @@
       <div class="campo-label">Frases prontas (clique para inserir)</div>
       ${frasesHtml}
     </div></details>`;
+    renderListaCatalogo();
     renderListaClientes();
     aplicarSecoes();
     travarFormulario();
@@ -610,6 +631,20 @@
       aplicarValor(chave, e.target.value);
       if (chave === 'cliente' || chave === 'docNum') atualizarProjetoAtual();
       if (chave === 'cliente') preencherCliente(e.target.value);
+      const mMod = /^carregadores\.(\d+)\.modelo$/.exec(chave);
+      if (mMod) {
+        const eq = catalogo.find(x => String(x.nome).trim().toLowerCase() === String(e.target.value).trim().toLowerCase());
+        const cg = projeto.carregadores[Number(mMod[1])];
+        if (eq && cg) {
+          cg.potencia = String(eq.potencia);
+          cg.conector = eq.conector || cg.conector;
+          if (eq.marca) cg.marca = eq.marca;
+          salvar(); renderTudo();
+          const el = $form.querySelector(`[data-chave="${chave}"]`);
+          if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+          return;
+        }
+      }
       if (/^carregadores\.\d+\.disjuntorManual$/.test(chave)) {
         $form.querySelectorAll(`[data-chave="${chave}"]`).forEach(el => { if (el !== e.target) el.value = e.target.value; });
       }
@@ -633,15 +668,6 @@
 
   $form.addEventListener('change', (e) => {
     const chave = e.target.dataset.chave;
-    if (e.target.dataset.catalogo !== undefined) {
-      const cg = projeto.carregadores[Number(e.target.dataset.catalogo)];
-      const eq = catalogo[Number(e.target.value)];
-      if (cg && eq) {
-        cg.modelo = eq.nome; cg.potencia = String(eq.potencia); cg.conector = eq.conector;
-      } else if (cg) cg.modelo = '';
-      salvar(); renderTudo();
-      return;
-    }
     if (chave === 'par-rede') {
       const [v, cfg] = e.target.value.split('|');
       projeto.tensao = Number(v);
@@ -702,12 +728,8 @@
       const i = Number(el.dataset.i);
       const pt = c.pontos[i];
       if (!pt) return;
-      const resumo = el.querySelector('.calc-resumo');
-      if (pt.Ib) {
-        const html = resumoPontoHtml(pt);
-        if (resumo) resumo.innerHTML = html;
-        else el.insertAdjacentHTML('beforeend', `<div class="calc-resumo">${html}</div>`);
-      }
+      const info = el.querySelector('.carga-info');
+      if (info) info.innerHTML = caracteristicasHtml(projeto.carregadores[i] || {}, pt);
     });
   }
 
@@ -749,7 +771,7 @@
     } else if (e.target.id === 'aplicar-restante') {
       const base = projeto.carregadores[0];
       projeto.carregadores.slice(1).forEach(cg => {
-        ['modelo', 'potencia', 'conector', 'distancia', 'infra', 'incluirKit'].forEach(k => { cg[k] = base[k]; });
+        ['marca', 'modelo', 'potencia', 'conector', 'distancia', 'infra', 'incluirKit'].forEach(k => { cg[k] = base[k]; });
       });
       salvar(); renderTudo();
       setStatus(`Dados do C-EV-01 aplicados aos outros ${projeto.carregadores.length - 1} ponto(s).`);
@@ -792,6 +814,18 @@
   }
 
   // ── Cadastro de clientes (reaproveita endereço e cidade) ──
+  // Sugestões do catálogo (modelo) e das marcas já usadas
+  function renderListaCatalogo() {
+    const dlC = document.getElementById('lista-catalogo');
+    const dlM = document.getElementById('lista-marcas');
+    if (dlC) dlC.innerHTML = catalogo.map(e => `<option value="${esc(e.nome)}"></option>`).join('');
+    if (dlM) {
+      const marcas = new Set();
+      catalogo.forEach(e => { if ((e.marca || '').trim()) marcas.add(e.marca.trim()); });
+      projetos.forEach(pr => (pr.carregadores || []).forEach(cg => { if ((cg.marca || '').trim()) marcas.add(cg.marca.trim()); }));
+      dlM.innerHTML = Array.from(marcas).sort().map(m => `<option value="${esc(m)}"></option>`).join('');
+    }
+  }
   function renderListaClientes() {
     const dl = document.getElementById('lista-clientes');
     if (!dl) return;
@@ -1094,13 +1128,13 @@
 
   // ── Catálogo de equipamentos (compartilhado) ──────────────
   function abrirCatalogo() {
-    const linhas = catalogo.map((e, i) => `<tr><td><input data-cat-campo="nome" data-i="${i}" value="${esc(e.nome)}" /></td><td><input data-cat-campo="potencia" data-i="${i}" type="number" step="0.1" value="${esc(e.potencia)}" style="width:80px" /></td><td><select data-cat-campo="conector" data-i="${i}">${window.Calc.CONECTORES.map(k => `<option${k === e.conector ? ' selected' : ''}>${k}</option>`).join('')}</select></td><td><select data-cat-campo="tipo" data-i="${i}"><option${e.tipo === 'AC' ? ' selected' : ''}>AC</option><option${e.tipo === 'DC' ? ' selected' : ''}>DC</option></select></td><td><input data-cat-campo="ip" data-i="${i}" value="${esc(e.ip || '')}" style="width:70px" /></td><td><button type="button" class="btn-mini" data-cat-rm="${i}">×</button></td></tr>`).join('');
-    abrirModal('Catálogo de equipamentos', `<p style="margin:0 0 10px;color:var(--g1)">Os modelos aparecem no campo "Modelo (catálogo BeGreen)" de cada ponto e preenchem potência e conector. O catálogo é compartilhado com todo o time.</p>
-      <table class="tab"><thead><tr><th>Modelo</th><th>kW</th><th>Conector</th><th>Tipo</th><th>IP</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
+    const linhas = catalogo.map((e, i) => `<tr><td><input data-cat-campo="marca" data-i="${i}" value="${esc(e.marca || '')}" style="width:110px" /></td><td><input data-cat-campo="nome" data-i="${i}" value="${esc(e.nome)}" /></td><td><input data-cat-campo="potencia" data-i="${i}" type="number" step="0.1" value="${esc(e.potencia)}" style="width:80px" /></td><td><select data-cat-campo="conector" data-i="${i}">${window.Calc.CONECTORES.map(k => `<option${k === e.conector ? ' selected' : ''}>${k}</option>`).join('')}</select></td><td><select data-cat-campo="tipo" data-i="${i}"><option${e.tipo === 'AC' ? ' selected' : ''}>AC</option><option${e.tipo === 'DC' ? ' selected' : ''}>DC</option></select></td><td><input data-cat-campo="ip" data-i="${i}" value="${esc(e.ip || '')}" style="width:70px" /></td><td><button type="button" class="btn-mini" data-cat-rm="${i}">×</button></td></tr>`).join('');
+    abrirModal('Catálogo de equipamentos', `<p style="margin:0 0 10px;color:var(--g1)">Os modelos aparecem como sugestão no campo "Modelo" de cada ponto e preenchem marca, potência e conector. O campo aceita qualquer texto: se o equipamento não estiver aqui, escreva direto no ponto. O catálogo é compartilhado com todo o time.</p>
+      <table class="tab"><thead><tr><th>Marca</th><th>Modelo</th><th>kW</th><th>Conector</th><th>Tipo</th><th>IP</th><th></th></tr></thead><tbody>${linhas}</tbody></table>
       <div style="display:flex;gap:8px"><button type="button" class="btn-mini" id="cat-add">+ adicionar</button><button type="button" class="btn primario" id="cat-salvar" style="padding:6px 14px">Salvar catálogo</button></div>`);
   }
   document.getElementById('modal-corpo').addEventListener('click', (e) => {
-    if (e.target.id === 'cat-add') { catalogo.push({ nome: 'Novo equipamento', potencia: 7.4, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' }); abrirCatalogo(); return; }
+    if (e.target.id === 'cat-add') { catalogo.push({ nome: 'Novo equipamento', marca: '', potencia: 7.4, conector: 'Tipo 2', tipo: 'AC', ip: 'IP54' }); abrirCatalogo(); return; }
     if (e.target.dataset.catRm !== undefined) { catalogo.splice(Number(e.target.dataset.catRm), 1); abrirCatalogo(); return; }
     if (e.target.id === 'cat-salvar') {
       document.querySelectorAll('#modal-corpo [data-cat-campo]').forEach(el => {

@@ -84,7 +84,7 @@ const DPS_TENSAO = { 127: 275, 220: 275, 380: 275, 440: 275 };
 const DPS_KA = 45; // padrão BeGreen: 45 kA Classe II
 
 // Potências comerciais de estação de recarga [kW]
-const POTENCIAS = [3.7, 7.4, 11, 22, 30, 40, 50, 60, 80, 120, 150, 180, 240, 360];
+const POTENCIAS = [3.7, 7.4, 11, 22, 30, 40, 50, 60, 80, 90, 100, 120, 150, 180, 240, 360];
 
 // Kit de proteção (disjuntor térmico + IDR + DPS):
 // obrigatório até 22 kW · opcional de 22 a 30 kW · inexistente acima de 30 kW
@@ -99,6 +99,9 @@ const AC_LIMITE_KW = 22;
 
 // Conectores disponíveis
 const CONECTORES = ['Tipo 1', 'Tipo 2', 'CCS 1', 'CCS 2', 'CHAdeMO', 'GBT'];
+
+// Fator de potência das estações de recarga (correção ativa no próprio equipamento)
+const FP = 1;
 
 // Ligação elétrica do carregador, derivada da potência e da rede disponível:
 // · ≥ 11 kW → trifásico (3F+N+T), √3 no cálculo
@@ -259,6 +262,8 @@ function calcularPonto(ponto, rede, infra, indice, fA) {
   const tipo = P > AC_LIMITE_KW ? 'DC' : 'AC';
   const modo = tipo === 'AC' ? 3 : 4;
   const conector = ponto.conector || '';
+  const marca = (ponto.marca || '').trim();
+  const modelo = (ponto.modelo || '').trim();
   const caboDesc = descCabo(secao, lig);
   const secaoTerra = secao ? terraSecao(secao) : 0;
 
@@ -274,7 +279,7 @@ function calcularPonto(ponto, rede, infra, indice, fA) {
     eletrodutoManual: !!ponto.eletrodutoManual, taxaOcupacao,
     dpsTensao, dpsKa,
     modelo: ponto.modelo || '', cabo: Number(ponto.cabo) || 0,
-    tipo, modo, conector,
+    tipo, modo, conector, marca, modelo, fp: FP,
     caboDesc, secaoTerra,
   };
 }
@@ -460,5 +465,5 @@ function fmt(n, casas) {
 window.Calc = {
   calcularProjeto, calcularPonto, fmt, num, ligacaoPonto, descCabo, terraSecao,
   ELETRODUTOS, ELETROCALHAS, SECOES, DIAMETRO_EXTERNO, DPS_TENSAO, POTENCIAS, INFRAS,
-  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES,
+  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP,
 };

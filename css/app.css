@@ -267,6 +267,9 @@ textarea { resize: vertical; }
   border-left: 3px solid var(--green); font-size: 10.5px; color: var(--tx2); border-radius: 6px;
 }
 .calc-resumo strong { color: var(--ink); }
+.carga-info { margin-top: 8px; font-size: 10.5px; line-height: 1.6; color: var(--g1); }
+.carga-info strong { color: var(--ink); font-weight: 600; }
+.carga-info .falta { color: var(--g3); font-style: italic; }
 .calc-resumo .ruim, .ruim { color: #C0392B; }
 .alerta {
   margin-top: 6px; padding: 6px 9px; background: #FBEeeb;
