@@ -215,8 +215,8 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .main {
   display: grid; grid-template-columns: 440px 1fr;
   flex: 1; min-height: 0;
-  /* foto de fundo inteira, esticada exatamente na área (sem corte nem ponto focal) */
-  background: url(../assets/fundo.webp) 0 0 / 100% 100% no-repeat #cfd3cc;
+  /* foto de fundo proporcional cobrindo a área, centralizada (como papel de parede) */
+  background: url(../assets/fundo.webp) center center / cover no-repeat #cfd3cc;
 }
 .painel-wrap {
   /* card de cristal flutuante: altura do conteúdo (até caber na tela) */
