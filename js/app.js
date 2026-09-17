@@ -603,6 +603,8 @@
         ${campoAv('Necessidade de transformador?', sel('transformador', [['nao', 'Não'], ['sim', 'Sim']]))}
         ${campoAv('Aterramento existente no cliente?', sel('aterramentoExistente', [['sim', 'Sim (integrar ao aterramento existente)'], ['nao', 'Não (BeGreen executa aterramento com hastes)']]))}
         ${campoAv('Esquema de aterramento', sel('aterramento', [['TN-S', 'TN-S (integrado ao aterramento existente)'], ['TT', 'TT (eletrodo próprio, haste exclusiva)']]))}
+        ${campo('Quadro de distribuição dedicado (QDA)?', sel('quadroDistribuicao', [['nao', 'Não'], ['sim', 'Sim']]))}
+        ${campo('Análise de demanda realizada?', sel('analiseDemanda', [['nao', 'Não (seção omitida do memorial)'], ['sim', 'Sim (incluir no memorial)']]))}
       </div>
     </div></details>
     ${trafoSim ? `<details data-sec="3"><summary><span class="sec-num">3</span>Transformador</summary><div class="sec-body">
@@ -617,8 +619,7 @@
     </div></details>` : `<details data-sec="3"><summary><span class="sec-num">3</span>Transformador</summary><div class="sec-body"><div class="campo-hint">Marque "Sim" em "Necessidade de transformador" para preencher.</div></div></details>`}
     <details data-sec="4"><summary><span class="sec-num">4</span>QDA</summary><div class="sec-body">
       <div class="grid2">
-        ${campo('Quadro de distribuição dedicado?', sel('quadroDistribuicao', [['nao', 'Não'], ['sim', 'Sim']]))}
-        ${quadroSim ? campo('Quantidade de estações de recarga', inp('qdQuantidade', { type: 'number', step: '1' })) : ''}
+        ${quadroSim ? campo('Quantidade de estações de recarga', inp('qdQuantidade', { type: 'number', step: '1' })) : '<div class="campo-hint">Marque "Sim" em "Quadro de distribuição dedicado (QDA)?" na etapa 2.</div>'}
       </div>
     </div></details>
     <details data-sec="5"><summary><span class="sec-num">5</span>Estações de recarga e circuitos</summary><div class="sec-body">
@@ -638,8 +639,7 @@
     </div></details>
     <details data-sec="7"${projeto.analiseDemanda === 'sim' ? '' : ''}><summary><span class="sec-num">7</span>Análise de demanda</summary><div class="sec-body">
       <div class="grid2">
-        ${campo('Análise de demanda realizada?', sel('analiseDemanda', [['nao', 'Não (seção omitida do memorial)'], ['sim', 'Sim (incluir no memorial)']]))}
-        ${projeto.analiseDemanda === 'sim' ? campo('Potência disponível medida (kW)', inp('potenciaDisponivel', { type: 'number', step: '0.5' })) : ''}
+        ${projeto.analiseDemanda === 'sim' ? campo('Potência disponível medida (kW)', inp('potenciaDisponivel', { type: 'number', step: '0.5' })) : '<div class="campo-hint">Marque "Sim" em "Análise de demanda realizada?" na etapa 2.</div>'}
         ${projeto.analiseDemanda === 'sim' ? campo('Pontos simultâneos', inp('pontosSimultaneos', { type: 'number', step: '1' })) : ''}
       </div>
     </div></details>
@@ -695,20 +695,32 @@
   const LS_ETAPA = 'begreen-etapa-atual';
   let etapaAtual = 1;
   try { etapaAtual = Math.min(ETAPAS.length, Math.max(1, parseInt(localStorage.getItem(LS_ETAPA), 10) || 1)); } catch (e) { etapaAtual = 1; }
+  // Etapas que não se aplicam ao projeto são puladas: 3 (sem transformador), 4 (sem QDA), 7 (sem análise de demanda)
+  function etapaPulada(n) {
+    if (n === 3) return projeto.transformador !== 'sim';
+    if (n === 4) return !(projeto.quadroDistribuicao === 'sim' || projeto.transformador === 'sim');
+    if (n === 7) return projeto.analiseDemanda !== 'sim';
+    return false;
+  }
+  function proximaEtapa(apartir, dir) {
+    for (let n = apartir; n >= 1 && n <= ETAPAS.length; n += dir) if (!etapaPulada(n)) return n;
+    return 0;
+  }
   function etapasHtml() {
     return `<div class="etapas">
-      <div class="etapas-barra">${ETAPAS.map(([n, t]) => `<button type="button" class="etapa-pt${n < etapaAtual ? ' ok' : ''}${n === etapaAtual ? ' atual' : ''}" data-etapa="${n}" title="${n} · ${t}"></button>`).join('')}</div>
+      <div class="etapas-barra">${ETAPAS.map(([n, t]) => `<button type="button" class="etapa-pt${n < etapaAtual ? ' ok' : ''}${n === etapaAtual ? ' atual' : ''}${etapaPulada(n) ? ' pulada' : ''}" data-etapa="${n}" title="${n} · ${t}${etapaPulada(n) ? ' (não se aplica)' : ''}"></button>`).join('')}</div>
       <div class="etapas-rot"><span>Etapa ${etapaAtual} de ${ETAPAS.length}</span><span class="etapas-pend"></span></div>
     </div>`;
   }
   function etapasNavHtml() {
-    const ultima = etapaAtual >= ETAPAS.length;
+    const ultima = !proximaEtapa(etapaAtual + 1, 1);
     return `<div class="etapas-nav">
-      <button type="button" class="etapa-btn" data-nav="ant"${etapaAtual <= 1 ? ' disabled' : ''}>‹ Anterior</button>
+      <button type="button" class="etapa-btn" data-nav="ant"${!proximaEtapa(etapaAtual - 1, -1) ? ' disabled' : ''}>‹ Anterior</button>
       <button type="button" class="etapa-btn pri" data-nav="${ultima ? 'fim' : 'prox'}">${ultima ? 'Concluir ✓' : 'Próximo ›'}</button>
     </div>`;
   }
   function aplicarEtapa() {
+    if (etapaPulada(etapaAtual)) { etapaAtual = proximaEtapa(etapaAtual, 1) || proximaEtapa(etapaAtual, -1) || 1; try { localStorage.setItem(LS_ETAPA, String(etapaAtual)); } catch (err) { /* ignora */ } }
     $form.querySelectorAll('details[data-sec]').forEach(d => {
       const n = +d.dataset.sec, ativa = n === etapaAtual;
       d.open = ativa; d.hidden = !ativa;
@@ -718,7 +730,7 @@
     });
     $form.querySelectorAll('.etapa-pt').forEach(b => {
       const n = +b.dataset.etapa;
-      b.classList.toggle('ok', n < etapaAtual); b.classList.toggle('atual', n === etapaAtual);
+      b.classList.toggle('ok', n < etapaAtual); b.classList.toggle('atual', n === etapaAtual); b.classList.toggle('pulada', etapaPulada(n));
     });
     const rot = $form.querySelector('.etapas-rot span'); if (rot) rot.textContent = `Etapa ${etapaAtual} de ${ETAPAS.length}`;
     const nav = $form.querySelector('.etapas-nav'); if (nav) nav.outerHTML = etapasNavHtml();
@@ -734,7 +746,9 @@
   $form.addEventListener('scroll', atualizarFade, true);
   window.addEventListener('resize', atualizarFade);
   function irEtapa(n, focar) {
-    etapaAtual = Math.min(ETAPAS.length, Math.max(1, n || 1));
+    n = Math.min(ETAPAS.length, Math.max(1, n || 1));
+    if (etapaPulada(n)) n = proximaEtapa(n, n >= etapaAtual ? 1 : -1) || proximaEtapa(n, n >= etapaAtual ? -1 : 1) || etapaAtual;
+    etapaAtual = n;
     try { localStorage.setItem(LS_ETAPA, String(etapaAtual)); } catch (err) { /* ignora */ }
     aplicarEtapa();
     const painel = document.getElementById('painel-form');
