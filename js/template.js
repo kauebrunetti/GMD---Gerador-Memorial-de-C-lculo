@@ -181,7 +181,7 @@
       const fq = d.fatorQueda && d.fatorQueda > 1.8 ? '2' : '√3';
       const L1 = `I = ${tr.circuito ? (d.Ib ? `P / V = ${fmt(d.P * 1000)} / ${d.lig.tri ? '(' + d.V + ' × √3)' : d.V} = ${fmt(d.Ib, 1)} A · disjuntor ${fmt(In)} A` : '[XX] A') : (d.origemI ? d.origemI + ' = ' : '') + (In ? fmt(In, In % 1 ? 1 : 0) + ' A' : '[XX] A')} · ${ligTxt} · L = ${d.L ? fmt(d.L) + ' m' : '[XX] m'}`;
       const L2 = d.secao
-        ? `Seção (método de referência ${d.infra.metodo}): I<sub>z</sub>(${fmt(d.secao)} mm²) × F<sub>T</sub>${d.fA && d.fA < 1 ? ' × F<sub>A</sub>' : ''} = ${fmt(d.izTabela)} × ${fmt(d.fT, 2)}${d.fA && d.fA < 1 ? ' × ' + fmt(d.fA, 2) : ''} = ${fmt(d.izCorrigida, 1)} A ≥ ${In ? fmt(In, In % 1 ? 1 : 0) : '[XX]'} A → ${d.caboDesc}`
+        ? `Seção (método de referência ${d.infra.metodo}, ${fmt(d.temp)} °C): I<sub>z</sub>(${fmt(d.secao)} mm²) × F<sub>T</sub>${d.fA && d.fA < 1 ? ' × F<sub>A</sub>' : ''} = ${fmt(d.izTabela)} × ${fmt(d.fT, 2)}${d.fA && d.fA < 1 ? ' × ' + fmt(d.fA, 2) : ''} = ${fmt(d.izCorrigida, 1)} A ≥ ${In ? fmt(In, In % 1 ? 1 : 0) : '[XX]'} A → ${d.caboDesc}`
         : 'Seção: aguardando corrente do trecho';
       const L3 = d.quedaPct
         ? `Queda de tensão: ΔV = (${fq} × 0,0224 × ${fmt(d.L)} × ${fmt(Iq, Iq % 1 ? 1 : 0)}) / (${fmt(d.secao)} × ${d.V}) × 100 = ${fmt(d.quedaPct, 2)} % ${d.quedaOk ? '≤' : '>'} 2 %`
@@ -570,7 +570,7 @@
     <tr><td style="${KV};color:${G1}">Seção adotada</td><td style="${KV};font-weight:600;color:${GREEN_D}">${manual(phn(pt.secao, 'mm²'), pt.secaoManual)}</td></tr>
   </tbody></table>
   ${h3('5.3 · Fator de correção de temperatura')}
-  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A temperatura ambiente máxima considerada para o sistema é de <strong>${phn(pt.temp, '°C')}</strong>. Havendo divergência em relação à temperatura de referência da tabela de capacidades, aplica-se o fator de correção da tabela 40 da NBR 5410. Para ${phn(pt.temp, '°C')} na condição de instalação adotada (${pt.infra.fator === 'solo' ? 'linha enterrada' : 'linha não enterrada'}), o fator é <strong>${fmt(pt.fT, 2)}</strong>:</p>
+  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A temperatura considerada no projeto é de <strong>${phn(c.temps && c.temps.ambiente ? c.temps.ambiente : 30, '°C')}</strong> para as linhas não enterradas e de <strong>${phn(c.temps && c.temps.solo ? c.temps.solo : 20, '°C')}</strong> para as linhas enterradas. Havendo divergência em relação à temperatura de referência da tabela de capacidades, aplica-se o fator de correção da tabela 40 da NBR 5410. Para ${phn(pt.temp, '°C')} na condição de instalação adotada (${pt.infra.fator === 'solo' ? 'linha enterrada' : 'linha não enterrada'}), o fator é <strong>${fmt(pt.fT, 2)}</strong>:</p>
   ${formula(`I<sub>z corrigida</sub> = I<sub>z tabela</sub> × F<sub>T</sub> × F<sub>A</sub> &nbsp;≥&nbsp; I<sub>b</sub>${pt.secao && pt.izCorrigida ? ` &nbsp;→&nbsp; ${fmt(pt.izCorrigida, 1)} A ≥ ${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)} A` : ''}`)}
   ${conclusao(`Os condutores de cada trecho, em cobre com isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '1 kV' : '750 V'}, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.`, 16)}
   ${h3('5.4 · Condutor de proteção (terra)')}

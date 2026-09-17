@@ -147,6 +147,12 @@ const caboDe = (chave) => CABOS[chave] || CABOS['1kV'];
 
 const SECOES = Object.keys(CAPACIDADE.B1).map(Number).sort((a, b) => a - b);
 
+// Temperatura considerada no trecho: do solo, em linha enterrada; ambiente, nas demais
+function temperaturaDe(infra, temps) {
+  const v = infra.fator === 'solo' ? temps.solo : temps.ambiente;
+  return Number(v) > 0 ? Number(v) : infra.tempRef;
+}
+
 // Fator de correção de temperatura — NBR 5410, tabela 40 (EPR/XLPE).
 const FATOR_TEMP = {
   // EPR/XLPE 90 °C (cabo de 1 kV) — linha enterrada, referência 20 °C
@@ -353,14 +359,15 @@ function comercialMaisProximo(lista, alvo, minimo) {
 }
 
 // Calcula um ponto de recarga completo.
-function calcularPonto(ponto, rede, infra, indice, fA, cabo) {
+function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps) {
   cabo = caboDe(cabo && cabo.chave);
+  temps = temps || {};
   fA = fA || 1;
   const P = Number(ponto.potencia) || 0;          // kW
   const lig = ligacaoPonto(P, rede);
   const V = lig.V;
   const L = Number(ponto.distancia) || 0;
-  const temp = Number(ponto.temperatura) || infra.tempRef;
+  const temp = Number(ponto.temperatura) || temperaturaDe(infra, temps);
 
   // Corrente de projeto (√3 apenas para carregadores trifásicos, ≥ 11 kW)
   const IbCalc = P > 0 ? (lig.tri ? (P * 1000) / (V * Math.sqrt(3)) : (P * 1000) / V) : 0;
@@ -475,12 +482,13 @@ const LIG_TRECHO = {
 };
 
 // Dimensiona um trecho de alimentação (cabo + eletroduto) pela corrente In
-function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo) {
+function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo, temps) {
   t = t || {};
   cabo = caboDe(cabo && cabo.chave);
+  const temp = temperaturaDe(infra, temps || {});
   const lig = LIG_TRECHO[ligKey] || LIG_TRECHO['3F+N+T'];
   const L = Number(t.L) || 0;
-  const fT = fatorTemperatura(infra.tempRef, infra.fator, cabo);
+  const fT = fatorTemperatura(temp, infra.fator, cabo);
   const tabelaCap = cabo.capacidade[infra.metodo] || cabo.capacidade.B1;
   const idx = lig.carregados >= 3 ? 1 : 0;
   let secaoCalc = 0;
@@ -509,7 +517,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo) {
   })();
   const izTabela = secao && tabelaCap[secao] ? tabelaCap[secao][idx] : 0;
   return {
-    In, V, ligKey, lig, L, fT, infra, secao, secaoCalc, secaoManual: num(t.secao) != null, origemI: origemI || '',
+    In, V, ligKey, lig, L, fT, temp, infra, secao, secaoCalc, secaoManual: num(t.secao) != null, origemI: origemI || '',
     izTabela, izCorrigida: izTabela * fT, fatorQueda: fq, de, areaOcupada, taxaOcupacao,
     caboDesc: descCabo(secao, lig), secaoTerra: secao ? terraSecao(secao) : 0,
     eletroduto, eletrodutoCalc, eletrodutoManual: !!t.eletroduto,
@@ -522,6 +530,7 @@ function calcularProjeto(p) {
   const rede = { tensao: p.tensao, config: p.config, ikPresumida: p.ikPresumida };
   const infra = INFRAS[p.infra] || INFRAS.B1;
   const cabo = caboDe(p.cabo1kv || p.classeCabo);
+  const temps = { ambiente: num(p.tempAmbiente), solo: num(p.tempSolo) };
   // Forma de passagem: definida por trecho (padrão: infra do projeto)
   const infraDe = (obj) => (obj && INFRAS[obj.infra]) || infra;
   // Trecho 4 agrupado: todos os circuitos no mesmo eletroduto/eletrocalha →
@@ -530,7 +539,7 @@ function calcularProjeto(p) {
   const nCirc = (p.carregadores && p.carregadores.length) || 1;
   const fA = agrupado ? (AGRUPAMENTO[Math.min(nCirc, 9)] || 0.5) : 1;
   const pontos = (p.carregadores && p.carregadores.length ? p.carregadores : [{}])
-    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA, cabo));
+    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA, cabo, temps));
   let trecho4 = null;
   if (agrupado) {
     const tipo = p.trecho4Duto === 'eletrocalha' ? 'eletrocalha' : 'eletroduto';
@@ -619,17 +628,17 @@ function calcularProjeto(p) {
   // distribuição; 4 quadro de distribuição → carregadores (= circuitos)
   const trechos = {};
   if (topologia === 'quadro') {
-    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total', cabo);
+    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total', cabo, temps);
     if (trafo) {
       const primV = trafo.primV || Number(rede.tensao) || 220;
-      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1', cabo);
+      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1', cabo, temps);
       const secLig = trafo.secLig || '3F+N+T';
       trechos.t3 = dimensionarTrecho(tp.t3, I3, secVTrafo, secLig, infraDe(tp.t3),
-        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'), cabo);
+        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'), cabo, temps);
     }
   }
 
-  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, cabo, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
+  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, cabo, temps, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
 }
 
 function num(v) {

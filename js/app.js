@@ -20,7 +20,7 @@
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
       tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim',
-      infra: 'B1', classeCabo: '1kV', quadroDistribuicao: 'nao', qdQuantidade: '',
+      infra: 'B1', classeCabo: '1kV', tempAmbiente: '30', tempSolo: '20', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
       trafoPrimV: '', trafoPrimLig: '', trafoSecV: '', trafoSecLig: '', trafoIp: '',
@@ -43,6 +43,8 @@
     if (METODO_ANTIGO[p.infra]) p.infra = METODO_ANTIGO[p.infra];
     if (!p.infra) p.infra = 'B1';
     if (!window.Calc.CABOS[p.classeCabo]) p.classeCabo = '1kV';
+    if (p.tempAmbiente === undefined || p.tempAmbiente === '') p.tempAmbiente = '30';
+    if (p.tempSolo === undefined || p.tempSolo === '') p.tempSolo = '20';
     (p.carregadores || []).forEach(cg => { if (METODO_ANTIGO[cg.infra]) cg.infra = METODO_ANTIGO[cg.infra]; });
     ['t1', 't2', 't3'].forEach(k => { const tr = (p.trechos || {})[k]; if (tr && METODO_ANTIGO[tr.infra]) tr.infra = METODO_ANTIGO[tr.infra]; });
     if (!p.quadroDistribuicao) p.quadroDistribuicao = p.topologia === 'quadro' ? 'sim' : 'nao';
@@ -603,6 +605,10 @@
     </div></details>
     <details data-sec="6"><summary>6 · Trechos e dimensionamento</summary><div class="sec-body">
       ${campo('Classe do cabo', sel('classeCabo', Object.values(window.Calc.CABOS).map(cb => [cb.chave, cb.chave === '1kV' ? 'HEPR 1 kV · dupla isolação (padrão BeGreen)' : 'PVC 750 V · isolação simples'])))}
+      <div class="grid2">
+        ${campo('Temperatura ambiente (°C)', inp('tempAmbiente', { type: 'number', step: '1' }))}
+        ${campo('Temperatura do solo (°C)', inp('tempSolo', { type: 'number', step: '1' }))}
+      </div>
       ${trechosHtml}
     </div></details>
     <details data-sec="7"${projeto.analiseDemanda === 'sim' ? '' : ''}><summary>7 · Análise de demanda</summary><div class="sec-body">
