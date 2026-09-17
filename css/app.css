@@ -18,6 +18,8 @@ body {
   background: #e8e9e4;
   color: var(--tx1);
   font-size: 13px;
+  /* barra + status + área principal empilhados na altura exata da janela (o card nunca sai da tela) */
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
 }
 
 /* ── Barra superior ─────────────────────────────────────── */
@@ -25,7 +27,7 @@ body {
   display: flex; align-items: center; gap: 14px;
   background: var(--ink); color: #fff;
   padding: 10px 16px;
-  position: sticky; top: 0; z-index: 20;
+  position: sticky; top: 0; z-index: 20; flex: none;
 }
 .topbar img { height: 18px; display: block; }
 .topbar .titulo {
@@ -51,6 +53,7 @@ body {
 .btn.bloqueado { opacity: .55; cursor: not-allowed; }
 
 #status {
+  flex: none;
   font-size: 10px; color: var(--g2); background: var(--bg1);
   border-bottom: 1px solid var(--ln1);
   padding: 4px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center;
@@ -94,15 +97,17 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .metr-card span { font-size: 10px; color: var(--g1); }
 
 /* ── Fluxo de aprovação ───────────────────────────────────── */
-.fluxo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; margin-top: 8px; font-size: 10.5px; color: var(--tx2); }
-.fluxo-status { font-family: Oswald, sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; background: rgba(27, 28, 27, .07); color: var(--g1); }
-.fluxo.revisado .fluxo-status { background: #FFF3D6; color: #8a6d1d; }
-.fluxo.emitido .fluxo-status { background: var(--resumo); color: var(--green-d); }
+/* fica na barra superior: pílula de status + botões; o texto explicativo vira dica (title) */
+.fluxo { display: flex; align-items: center; gap: 6px; margin-left: 10px; padding-left: 14px; border-left: 1px solid #3a3c39; }
+.fluxo-status { font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: #2a2b2a; color: #bfc2bb; border: 1px solid #3a3c39; }
+.fluxo.revisado .fluxo-status { background: #4a3a10; color: #F3D27A; border-color: #6a5420; }
+.fluxo.emitido .fluxo-status { background: #1f4a1d; color: var(--green-l); border-color: var(--green-d); }
+.fluxo .btn-mini { background: transparent; color: #bfc2bb; border-color: #4a4c49; padding: 5px 10px; font-size: 9.5px; }
+.fluxo .btn-mini:hover { color: #fff; border-color: var(--green-l); }
 .fluxo .btn-mini.destaque { background: var(--green); color: #fff; border-color: var(--green); }
 .fluxo .btn-mini.destaque:hover { background: var(--green-d); }
-.fluxo .btn-mini:hover { color: var(--green-d); border-color: var(--green); }
-.fluxo .btn-mini:disabled { opacity: .5; cursor: not-allowed; }
-.fluxo-info { flex: 1; font-size: 10.5px; color: var(--g1); }
+.fluxo .btn-mini:disabled { opacity: .4; cursor: not-allowed; }
+.fluxo-info { display: none; }
 #form.travado input:not(.rev-abrir), #form.travado select, #form.travado textarea { background: var(--bg2); color: var(--g1); }
 .frase.off, .biblio-item.off { opacity: .45; pointer-events: none; }
 
@@ -162,6 +167,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 
 /* ── Pendências antes de emitir ───────────────────────────── */
 #pendencias { margin-top: 10px; overflow: hidden; flex: none; }
+#pendencias.ok { display: none; }
 .pend-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; cursor: pointer;
   font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
@@ -204,7 +210,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 /* ── Layout: formulário + preview ───────────────────────── */
 .main {
   display: grid; grid-template-columns: 440px 1fr;
-  height: calc(100vh - 64px);
+  flex: 1; min-height: 0;
   /* fundo do painel de parâmetros: manchas suaves atrás dos cards de vidro */
   background:
     radial-gradient(260px 220px at 8% 6%, rgba(58, 170, 53, .34), transparent 70%),
@@ -268,6 +274,7 @@ summary::-webkit-details-marker { display: none; }
 }
 .sec-sub { font-size: 11.5px; color: var(--g1); margin: 0 0 14px; }
 .sec-body { padding: 0 16px 16px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+details.mais .sec-body { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
 .sec-body::-webkit-scrollbar, details::-webkit-scrollbar { display: none; }
 
 /* ── Assistente por etapas: barra de progresso e navegação ─── */
@@ -457,7 +464,7 @@ textarea { resize: vertical; }
 @page { size: A4; margin: 0; }
 @media print {
   html, body { height: auto; }
-  body { background: #fff; }
+  body { background: #fff; display: block; overflow: visible; }
   .topbar, #status, .painel-form, #painel-projetos, #medidor-paginas { display: none !important; }
   .main { display: block; height: auto; }
   .painel-preview { overflow: visible; padding: 0; }

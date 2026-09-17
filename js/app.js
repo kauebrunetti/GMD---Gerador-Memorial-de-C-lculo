@@ -740,7 +740,16 @@
     const rot = $form.querySelector('.etapas-rot span'); if (rot) rot.textContent = `Etapa ${etapaAtual} de ${ETAPAS.length}`;
     const nav = $form.querySelector('.etapas-nav'); if (nav) nav.outerHTML = etapasNavHtml();
     if (typeof marcarEtapasPendentes === 'function') marcarEtapasPendentes();
+    atualizarFade();
   }
+  // Marca a etapa quando ainda há campos abaixo (o corpo rola por dentro do card, sem barra)
+  function atualizarFade() {
+    const d = $form.querySelector('details[data-sec]:not([hidden])'); if (!d) return;
+    const b = d.querySelector('.sec-body'); if (!b) return;
+    d.classList.toggle('mais', b.scrollTop + b.clientHeight < b.scrollHeight - 4);
+  }
+  $form.addEventListener('scroll', atualizarFade, true);
+  window.addEventListener('resize', atualizarFade);
   function irEtapa(n, focar) {
     etapaAtual = Math.min(ETAPAS.length, Math.max(1, n || 1));
     try { localStorage.setItem(LS_ETAPA, String(etapaAtual)); } catch (err) { /* ignora */ }
@@ -1194,6 +1203,7 @@
     else acoes = `<span class="fluxo-info">Emitido por ${esc(projeto.emitidoPor || '—')} em ${dataCurta(projeto.emitidoEm)}. Para alterar, abra uma nova revisão.</span><button type="button" class="btn-mini" data-fluxo="nova-revisao">Nova revisão</button>`;
     $f.className = 'fluxo ' + st;
     $f.innerHTML = `<span class="fluxo-status">${rot[st]}</span>${acoes}`;
+    const info = $f.querySelector('.fluxo-info'); $f.title = info ? info.textContent : '';
   }
   document.getElementById('fluxo').addEventListener('click', (e) => {
     const b = e.target.closest('[data-fluxo]');
