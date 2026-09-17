@@ -124,7 +124,8 @@
     const listaCabos = listaTrechos(d => d.caboDesc || '[XX]');
     const listaTerra = listaTrechos(d => d.secaoTerra ? fmt(d.secaoTerra) + ' mm²' : '[XX]');
     const listaDutos = listaTrechos(d => d.eletroduto ? esc(d.eletroduto) : '[Ø]');
-    const listaQueda = listaTrechos(d => d.quedaPct ? fmt(d.quedaPct, 2) + ' %' + (d.quedaOk ? '' : ' (acima de 2 %)') : '[XX]');
+    const limiteQueda = fmt(c.quedaMax || 4, (c.quedaMax || 4) % 1 ? 1 : 0);
+    const listaQueda = listaTrechos(d => d.quedaPct ? fmt(d.quedaPct, 2) + ' %' + (d.quedaOk ? '' : ` (acima de ${limiteQueda} %)`) : '[XX]');
     const algumaQuedaRuim = trechosDim.some(tr => !tr.d.quedaOk);
     const infrasUsadas = Array.from(new Set(trechosDim.map(tr => tr.d.infra.familia)));
     // Tabelas de capacidade citadas: dependem da classe do cabo e dos métodos usados
@@ -197,14 +198,14 @@
       </div>`;
     };
     const tabelaConclusao = `<table style="width:100%;border-collapse:collapse;font-size:9.5px">
-    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Método</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (${cabo.nome})</th><th style="${TH8}">Terra</th><th style="${TH8}">Eletroduto</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
+    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Método</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (${cabo.nome})</th><th style="${TH8}">Terra</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
     <tbody>${trechosCalc.map((tr, i) => { const d = tr.d; const In = tr.circuito ? d.alvo : d.In;
       const motivos = [];
       if (d.secao && In && d.izCorrigida < In) motivos.push('capacidade de condução');
       if (!d.quedaOk) motivos.push('ΔV ' + fmt(d.quedaPct, 2) + ' %');
       if (d.taxaOcupacao > 40) motivos.push('ocupação ' + fmt(d.taxaOcupacao, 1) + ' % com ' + d.lig.nv + ' condutores');
       const okTudo = motivos.length === 0;
-      return `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${tr.titulo}</td><td style="${TD8};color:${TX1}">${d.infra.metodo}</td><td style="${TD8};color:${TX1}">${In ? fmt(In, In % 1 ? 1 : 0) + ' A' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.caboDesc ? manual(d.caboDesc, d.secaoManual) : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secaoTerra ? fmt(d.secaoTerra) + ' mm²' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.eletroduto ? manual(esc(d.eletroduto), d.eletrodutoManual) : `<span style="color:${G2}">[Ø]</span>`}</td><td style="${TD8};color:${TX1}">${d.L ? fmt(d.L) + ' m' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}${d.quedaOk ? '' : ';color:#C0392B;font-weight:600'}">${d.quedaPct ? fmt(d.quedaPct, 2) + ' %' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secao && d.quedaPct ? (okTudo ? `<span style="color:${GREEN_D};font-weight:600">Atende</span>` : `<span style="color:#C0392B;font-weight:600">Reavaliar</span><br /><span style="font-size:8px;color:#8a2d26">${motivos.join(' · ')}</span>`) : `<span style="color:${G2}">Pendente</span>`}</td></tr>`; }).join('\n      ')}</tbody>
+      return `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${tr.titulo}</td><td style="${TD8};color:${TX1}">${d.infra.metodo}</td><td style="${TD8};color:${TX1}">${In ? fmt(In, In % 1 ? 1 : 0) + ' A' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.caboDesc ? manual(d.caboDesc, d.secaoManual) : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secaoTerra ? fmt(d.secaoTerra) + ' mm²' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.L ? fmt(d.L) + ' m' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}${d.quedaOk ? '' : ';color:#C0392B;font-weight:600'}">${d.quedaPct ? fmt(d.quedaPct, 2) + ' %' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secao && d.quedaPct ? (okTudo ? `<span style="color:${GREEN_D};font-weight:600">Atende</span>` : `<span style="color:#C0392B;font-weight:600">Reavaliar</span><br /><span style="font-size:8px;color:#8a2d26">${motivos.join(' · ')}</span>`) : `<span style="color:${G2}">Pendente</span>`}</td></tr>`; }).join('\n      ')}</tbody>
   </table>`;
     const temFotos = p.fotos && p.fotos.length;
 
@@ -515,7 +516,7 @@
     const CRIT = [
       ['Capacidade de condução', 'I<sub>z</sub> corrigida ≥ I<sub>n</sub> do dispositivo de proteção ≥ I<sub>b</sub> de projeto'],
       ['Seção mínima', '2,5 mm² para circuitos de força (NBR 5410, tabela 47)'],
-      ['Queda de tensão', 'ΔV ≤ 4 % do total, sendo ≤ 2 % no circuito terminal'],
+      ['Queda de tensão', `ΔV ≤ ${limiteQueda} % no circuito, dentro do limite global de 4 % da NBR 5410 a partir do ponto de entrega`],
       ['Sobrecarga', 'Coordenação disjuntor × condutor conforme item 5.3.4 da NBR 5410'],
       ['Curto-circuito', 'I²t suportável pelo cabo ≥ I²t deixado passar pelo disjuntor; I<sub>cn</sub> ≥ I<sub>k</sub> presumida'],
       ['Proteção contra choques', 'Seccionamento automático + proteção diferencial-residual de 30 mA Tipo A'],
@@ -543,7 +544,7 @@
 </div>`);
 
     // ══ CONDUTORES ══ (memória de cálculo com valores reais do ponto 1)
-    const notaMulti = multi ? `<p style="font-size:9px;line-height:1.6;color:${G2};margin:0 0 12px">Memória de cálculo apresentada para o circuito C-EV-01; os demais circuitos seguem o mesmo método e constam no cálculo por trecho (item 5.5) e no resumo do dimensionamento (item 5.6).</p>` : '';
+    const notaMulti = multi ? `<p style="font-size:9px;line-height:1.6;color:${G2};margin:0 0 12px">Memória de cálculo apresentada para o circuito C-EV-01; os demais circuitos seguem o mesmo método e constam no cálculo por trecho (item 5.3) e no resumo do dimensionamento (item 5.6).</p>` : '';
     const fasesTxt = pt.lig.tri ? `trifásico (${pt.lig.rotulo})` : (pt.lig.fases === 1 ? `monofásico (${pt.lig.rotulo})` : `bifásico (${pt.lig.rotulo})`);
     const formulaIb = pt.lig.tri ? `I<sub>b</sub> = P / (V·√3)` : `I<sub>b</sub> = P / V`;
     const calcIb = temDados
@@ -561,7 +562,14 @@
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A corrente de projeto é obtida a partir da potência nominal da estação e da tensão de alimentação. Para a estação de ${phn(pt.P, 'kW')} em ${pt.V} V ${fasesTxt}${pt.lig.tri ? ' (estações de recarga a partir de ' + fmt(window.Calc.TRIFASICO_KW) + ' kW são trifásicos e usam √3 no cálculo)' : ''}:</p>
   ${formula(calcIb)}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 16px">Adota-se como corrente de projeto o valor calculado${temDados ? ` (<strong>${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)} A</strong>)` : ''}. A distância entre o quadro de origem e a estação, levantada em vistoria técnica, é de <strong>${phn(pt.L, 'm')}</strong>.</p>
-  ${h3('5.2 · Condutores de fase')}
+  ${h3('5.2 · Fator de correção de temperatura')}
+  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A temperatura considerada no projeto é de <strong>${phn(c.temps && c.temps.ambiente ? c.temps.ambiente : 30, '°C')}</strong> para as linhas não enterradas e de <strong>${phn(c.temps && c.temps.solo ? c.temps.solo : 20, '°C')}</strong> para as linhas enterradas. Havendo divergência em relação à temperatura de referência da tabela de capacidades, aplica-se o fator de correção da tabela 40 da NBR 5410. Para ${phn(pt.temp, '°C')} na condição de instalação adotada (${pt.infra.fator === 'solo' ? 'linha enterrada' : 'linha não enterrada'}), o fator é <strong>${fmt(pt.fT, 2)}</strong>:</p>
+  ${formula(`I<sub>z corrigida</sub> = I<sub>z tabela</sub> × F<sub>T</sub> × F<sub>A</sub> &nbsp;≥&nbsp; I<sub>b</sub>${pt.secao && pt.izCorrigida ? ` &nbsp;→&nbsp; ${fmt(pt.izCorrigida, 1)} A ≥ ${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)} A` : ''}`)}
+  ${conclusao(`Os condutores de cada trecho, em cobre com isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '1 kV' : '750 V'}, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.3 e o resumo no item 5.6.`, 16)}
+  ${h3('5.3 · Cálculo por trecho')}
+  <p style="font-size:10px;line-height:1.6;color:${G1};margin:0 0 10px">Para cada trecho: corrente considerada, seção pela capacidade de condução (I<sub>z</sub> × F<sub>T</sub> ≥ I), queda de tensão e ocupação do eletroduto.</p>
+  ${trechosCalc.map(cartaoTrecho).join('\n  ')}
+  ${h3('5.4 · Condutores de fase')}
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px"><tbody>
     ${trKV('Potência da estação', phn(pt.P, 'kW'), '52%')}
     ${trKV('Tensão de alimentação', `${pt.V} V ${fasesTxt}`)}
@@ -569,11 +577,7 @@
     ${trKV('Condutor', `Cobre, isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '0,6/1 kV' : '450/750 V'}`)}
     <tr><td style="${KV};color:${G1}">Seção adotada</td><td style="${KV};font-weight:600;color:${GREEN_D}">${manual(phn(pt.secao, 'mm²'), pt.secaoManual)}</td></tr>
   </tbody></table>
-  ${h3('5.3 · Fator de correção de temperatura')}
-  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A temperatura considerada no projeto é de <strong>${phn(c.temps && c.temps.ambiente ? c.temps.ambiente : 30, '°C')}</strong> para as linhas não enterradas e de <strong>${phn(c.temps && c.temps.solo ? c.temps.solo : 20, '°C')}</strong> para as linhas enterradas. Havendo divergência em relação à temperatura de referência da tabela de capacidades, aplica-se o fator de correção da tabela 40 da NBR 5410. Para ${phn(pt.temp, '°C')} na condição de instalação adotada (${pt.infra.fator === 'solo' ? 'linha enterrada' : 'linha não enterrada'}), o fator é <strong>${fmt(pt.fT, 2)}</strong>:</p>
-  ${formula(`I<sub>z corrigida</sub> = I<sub>z tabela</sub> × F<sub>T</sub> × F<sub>A</sub> &nbsp;≥&nbsp; I<sub>b</sub>${pt.secao && pt.izCorrigida ? ` &nbsp;→&nbsp; ${fmt(pt.izCorrigida, 1)} A ≥ ${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)} A` : ''}`)}
-  ${conclusao(`Os condutores de cada trecho, em cobre com isolação ${cabo.isolacao} ${cabo.chave === '1kV' ? '1 kV' : '750 V'}, atendem à capacidade de condução com o fator de temperatura aplicado. O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.`, 16)}
-  ${h3('5.4 · Condutor de proteção (terra)')}
+  ${h3('5.5 · Condutor de proteção (terra)')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">A seção do condutor de proteção é determinada pela tabela 58 da NBR 5410, em função da seção dos condutores de fase:</p>
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px">
     <thead><tr style="background:${INK};color:#fff"><th style="${TH}">Seção dos condutores de fase S</th><th style="${TH}">Seção mínima do condutor de proteção</th></tr></thead>
@@ -584,9 +588,6 @@
     </tbody>
   </table>
   ${conclusao(`O condutor de proteção de cada trecho segue a tabela 58, com isolação 1 kV, na cor verde ou verde-amarela. As seções estão no resumo do item 5.6.`, 18)}
-  ${h3('5.5 · Cálculo por trecho')}
-  <p style="font-size:10px;line-height:1.6;color:${G1};margin:0 0 10px">Para cada trecho: corrente considerada, seção pela capacidade de condução (I<sub>z</sub> × F<sub>T</sub> ≥ I), queda de tensão e ocupação do eletroduto.</p>
-  ${trechosCalc.map(cartaoTrecho).join('\n  ')}
   ${h3('5.6 · Conclusão do dimensionamento')}
   ${tabelaConclusao}
 </div>`);
@@ -734,16 +735,16 @@
       ? `ΔV% = (${fq} × 0,0224 × ${fmt(pt.L)} × ${fmt(pt.Ib, pt.Ib % 1 ? 1 : 0)}) / (${fmt(pt.secao)} × ${pt.V}) × 100 = <strong style="color:${quedaCor}">${fmt(pt.quedaPct, 2)} %</strong>`
       : `ΔV% = (${fq} × 0,0224 × <span style="color:${G2}">[L] × [Ib]</span>) / (<span style="color:${G2}">[S]</span> × ${pt.V}) × 100 = <strong style="color:${G2}">[XX] %</strong>`;
     const quedaAlerta = !pt.quedaOk && pt.secaoSugeridaQueda
-      ? `<p style="font-size:10px;line-height:1.6;color:#C0392B;margin:0 0 12px;font-weight:600">⚠ A queda de tensão excede o limite de 2 %. Recomenda-se adotar a seção de ${fmt(pt.secaoSugeridaQueda)} mm² para este circuito.</p>` : '';
+      ? `<p style="font-size:10px;line-height:1.6;color:#C0392B;margin:0 0 12px;font-weight:600">⚠ A queda de tensão excede o limite de ${limiteQueda} %. Recomenda-se adotar a seção de ${fmt(pt.secaoSugeridaQueda)} mm² para este circuito.</p>` : '';
     const resumoSec8 = temQueda
-      ? `Duas verificações finais: a perda de energia no cabo é ${pt.quedaOk ? 'mínima' : 'verificada'} (<strong>${fmt(pt.quedaPct, 2)} %</strong>${pt.quedaOk ? ', bem abaixo do limite de 2 %' : ', acima do limite de 2 %, seção em reavaliação'}) e o cabo suporta um curto-circuito sem se danificar até a proteção atuar. ${pt.quedaOk ? 'A instalação passa nos dois testes com folga.' : 'Ver alerta no item 8.1.'}`
-      : 'Duas verificações finais: a perda de energia no cabo deve ficar abaixo do limite de 2 % e o cabo deve suportar um curto-circuito sem se danificar até a proteção atuar.';
+      ? `Duas verificações finais: a perda de energia no cabo é ${pt.quedaOk ? 'mínima' : 'verificada'} (<strong>${fmt(pt.quedaPct, 2)} %</strong>${pt.quedaOk ? `, dentro do limite de ${limiteQueda} %` : `, acima do limite de ${limiteQueda} %, seção em reavaliação`}) e o cabo suporta um curto-circuito sem se danificar até a proteção atuar. ${pt.quedaOk ? 'A instalação passa nos dois testes com folga.' : 'Ver alerta no item 8.1.'}`
+      : `Duas verificações finais: a perda de energia no cabo deve ficar abaixo do limite de ${limiteQueda} % e o cabo deve suportar um curto-circuito sem se danificar até a proteção atuar.`;
     out.push(`<div style="font-family:Montserrat,sans-serif">
   ${secHeader(NUM.memoria, TIT.memoria, 'memoria')}
   ${emResumo(resumoSec8)}
   ${notaMulti}
   ${h3('8.1 · Queda de tensão')}
-  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">Verifica-se a queda de tensão no circuito terminal, cujo limite é de 2 %, com folga em relação ao limite global de 4 % previsto na NBR 5410 a partir do ponto de entrega:</p>
+  <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">Verifica-se a queda de tensão no circuito, cujo limite adotado neste projeto é de ${limiteQueda} %, observado o limite global de 4 % previsto na NBR 5410 a partir do ponto de entrega:</p>
   ${formula(`ΔV% = (k · ρ · L · I) / (S · V) × 100`, `k = 2 em circuitos monofásicos e bifásicos, √3 em trifásicos · ρ = resistividade do cobre a 70 °C ≈ 0,0224 Ω·mm²/m · L = comprimento do trecho [m] · I = corrente do trecho [A] · S = seção do condutor [mm²] · V = tensão do trecho [V]`)}
   ${(() => {
     const fqDe = (d) => (d.fatorQueda && d.fatorQueda < 1.8) ? '√3' : '2';
@@ -760,7 +761,7 @@
     <tbody>${linhas.join('\n    ')}</tbody>
   </table>`;
   })()}
-  ${conclusao(`${algumaQuedaRuim ? 'Há trecho com queda de tensão acima de 2 %, marcado como "Reavaliar" no item 5.6: adotar a seção seguinte ou revisar o traçado.' : 'A queda de tensão de todos os trechos fica dentro do limite de 2 %.'} O cálculo de cada trecho está no item 5.5 e o resumo no item 5.6.`, 18)}
+  ${conclusao(`${algumaQuedaRuim ? `Há trecho com queda de tensão acima de ${limiteQueda} %, marcado como "Reavaliar" no item 5.6: adotar a seção seguinte ou revisar o traçado.` : `A queda de tensão de todos os trechos fica dentro do limite de ${limiteQueda} %.`} O cálculo de cada trecho está no item 5.3 e o resumo no item 5.6.`, 18)}
   ${h3('8.2 · Corrente de curto-circuito e solicitação térmica')}
   <p style="font-size:11px;line-height:1.7;color:${TX1};margin:0 0 10px">Verifica-se se as seções adotadas suportam a solicitação térmica do curto-circuito durante o tempo de atuação da proteção:</p>
   ${formula('S<sub>mín</sub> = √(I<sub>k</sub>² · t) / k', `I<sub>k</sub> = corrente de curto-circuito presumida no ponto [kA] · t = tempo de atuação da proteção [s] · k = 143 para cobre com isolação HEPR/EPR (NBR 5410)`)}

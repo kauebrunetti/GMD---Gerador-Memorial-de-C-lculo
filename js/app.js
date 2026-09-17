@@ -20,7 +20,7 @@
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
       tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim',
-      infra: 'B1', classeCabo: '1kV', tempAmbiente: '30', tempSolo: '20', quadroDistribuicao: 'nao', qdQuantidade: '',
+      infra: 'B1', classeCabo: '1kV', tempAmbiente: '30', tempSolo: '20', quedaMax: '4', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
       trafoPrimV: '', trafoPrimLig: '', trafoSecV: '', trafoSecLig: '', trafoIp: '',
@@ -45,6 +45,7 @@
     if (!window.Calc.CABOS[p.classeCabo]) p.classeCabo = '1kV';
     if (p.tempAmbiente === undefined || p.tempAmbiente === '') p.tempAmbiente = '30';
     if (p.tempSolo === undefined || p.tempSolo === '') p.tempSolo = '20';
+    if (!(Number(p.quedaMax) > 0)) p.quedaMax = String(window.Calc.QUEDA_MAX);
     (p.carregadores || []).forEach(cg => { if (METODO_ANTIGO[cg.infra]) cg.infra = METODO_ANTIGO[cg.infra]; });
     ['t1', 't2', 't3'].forEach(k => { const tr = (p.trechos || {})[k]; if (tr && METODO_ANTIGO[tr.infra]) tr.infra = METODO_ANTIGO[tr.infra]; });
     if (!p.quadroDistribuicao) p.quadroDistribuicao = p.topologia === 'quadro' ? 'sim' : 'nao';
@@ -489,7 +490,7 @@
           ${chaveE ? campoAv('Eletroduto', sel(chaveE, opcoesEletroduto)) : ''}
         </div>
         ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} ${c.cabo.nome} · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
-        ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; 2 %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
+        ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; ${fmt(c.quedaMax, c.quedaMax % 1 ? 1 : 0)} %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
       </div>`;
 
     // Cards dos carregadores: potência, conector, disjuntor (+ kit opcional de 22 a 30 kW)
@@ -541,7 +542,7 @@
             ${agrupado ? '' : campoAv('Eletroduto', sel(`carregadores.${i}.eletrodutoManual`, opcoesEletroduto))}
           </div>
           ${d && d.secao ? `<div class="calc-resumo">${d.caboDesc} ${c.cabo.nome} · ${d.eletroduto || '[Ø]'}${d.quedaPct ? ` · ΔV <strong${d.quedaOk ? '' : ' class="ruim"'}>${fmt(d.quedaPct, 2)} %</strong>` : ''}</div>` : ''}
-          ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; 2 %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
+          ${d && !d.quedaOk ? `<div class="alerta">⚠ ΔV ${fmt(d.quedaPct, 2)} % &gt; ${fmt(c.quedaMax, c.quedaMax % 1 ? 1 : 0)} %${d.secaoSugeridaQueda ? `: sugerido ${fmt(d.secaoSugeridaQueda)} mm²` : ''}</div>` : ''}
         </div>`; }).join('')}
       </div>`,
     ].join('');
@@ -608,6 +609,7 @@
       <div class="grid2">
         ${campo('Temperatura ambiente (°C)', inp('tempAmbiente', { type: 'number', step: '1' }))}
         ${campo('Temperatura do solo (°C)', inp('tempSolo', { type: 'number', step: '1' }))}
+        ${campo('Limite de queda de tensão (%)', inp('quedaMax', { type: 'number', step: '0.5' }))}
       </div>
       ${trechosHtml}
     </div></details>

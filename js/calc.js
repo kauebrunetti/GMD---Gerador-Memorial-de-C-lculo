@@ -277,6 +277,9 @@ const KIT_LIMITE_KW = 30;
 // Potência a partir da qual o carregador é trifásico (usa √3 no cálculo)
 const TRIFASICO_KW = 11;
 
+// Limite padrão de queda de tensão no circuito [%] — editável por projeto
+const QUEDA_MAX = 4;
+
 // Tipo de saída: AC até 22 kW; acima, DC (Modo 4)
 const AC_LIMITE_KW = 22;
 
@@ -359,7 +362,8 @@ function comercialMaisProximo(lista, alvo, minimo) {
 }
 
 // Calcula um ponto de recarga completo.
-function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps) {
+function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps, quedaMax) {
+  quedaMax = Number(quedaMax) > 0 ? Number(quedaMax) : QUEDA_MAX;
   cabo = caboDe(cabo && cabo.chave);
   temps = temps || {};
   fA = fA || 1;
@@ -418,11 +422,11 @@ function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps) {
   const izCorrigida = izTabela * fT * fA;
 
   const quedaPct = quedaDe(secao);
-  const quedaOk = quedaPct <= 2 || quedaPct === 0;
+  const quedaOk = quedaPct <= quedaMax || quedaPct === 0;
   let secaoSugeridaQueda = null;
   if (!quedaOk) {
     for (const s of SECOES) {
-      if (s > secao && quedaDe(s) <= 2) { secaoSugeridaQueda = s; break; }
+      if (s > secao && quedaDe(s) <= quedaMax) { secaoSugeridaQueda = s; break; }
     }
   }
 
@@ -461,7 +465,7 @@ function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps) {
     usaKit, kitOpcional, usaIdr: usaKit,
     idr, idrCalc, idrManual: num(ponto.idrManual) != null,
     secao, secaoCalc, secaoCapacidade, secaoManual: num(ponto.secaoManual) != null,
-    izCorrigida, quedaPct, quedaOk, secaoSugeridaQueda,
+    izCorrigida, quedaPct, quedaOk, secaoSugeridaQueda, quedaMax,
     de, areaOcupada, eletroduto, eletrodutoCalc: eletrodutoCalc ? eletrodutoCalc.nome : '',
     eletrodutoManual: !!ponto.eletrodutoManual, taxaOcupacao,
     dpsTensao, dpsKa,
@@ -482,7 +486,8 @@ const LIG_TRECHO = {
 };
 
 // Dimensiona um trecho de alimentação (cabo + eletroduto) pela corrente In
-function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo, temps) {
+function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo, temps, quedaMax) {
+  quedaMax = Number(quedaMax) > 0 ? Number(quedaMax) : QUEDA_MAX;
   t = t || {};
   cabo = caboDe(cabo && cabo.chave);
   const temp = temperaturaDe(infra, temps || {});
@@ -521,7 +526,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo, temps) {
     izTabela, izCorrigida: izTabela * fT, fatorQueda: fq, de, areaOcupada, taxaOcupacao,
     caboDesc: descCabo(secao, lig), secaoTerra: secao ? terraSecao(secao) : 0,
     eletroduto, eletrodutoCalc, eletrodutoManual: !!t.eletroduto,
-    quedaPct, quedaOk: quedaPct <= 2 || quedaPct === 0,
+    quedaPct, quedaOk: quedaPct <= quedaMax || quedaPct === 0, quedaMax,
   };
 }
 
@@ -531,6 +536,7 @@ function calcularProjeto(p) {
   const infra = INFRAS[p.infra] || INFRAS.B1;
   const cabo = caboDe(p.cabo1kv || p.classeCabo);
   const temps = { ambiente: num(p.tempAmbiente), solo: num(p.tempSolo) };
+  const quedaMax = num(p.quedaMax) > 0 ? num(p.quedaMax) : QUEDA_MAX;
   // Forma de passagem: definida por trecho (padrão: infra do projeto)
   const infraDe = (obj) => (obj && INFRAS[obj.infra]) || infra;
   // Trecho 4 agrupado: todos os circuitos no mesmo eletroduto/eletrocalha →
@@ -539,7 +545,7 @@ function calcularProjeto(p) {
   const nCirc = (p.carregadores && p.carregadores.length) || 1;
   const fA = agrupado ? (AGRUPAMENTO[Math.min(nCirc, 9)] || 0.5) : 1;
   const pontos = (p.carregadores && p.carregadores.length ? p.carregadores : [{}])
-    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA, cabo, temps));
+    .map((c, i) => calcularPonto(c, rede, infraDe(c), i, fA, cabo, temps, quedaMax));
   let trecho4 = null;
   if (agrupado) {
     const tipo = p.trecho4Duto === 'eletrocalha' ? 'eletrocalha' : 'eletroduto';
@@ -628,17 +634,17 @@ function calcularProjeto(p) {
   // distribuição; 4 quadro de distribuição → carregadores (= circuitos)
   const trechos = {};
   if (topologia === 'quadro') {
-    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total', cabo, temps);
+    trechos.t1 = dimensionarTrecho(tp.t1, alimentador, Number(rede.tensao) || 220, String(rede.config), infraDe(tp.t1), alimentadorManual ? 'corrente informada' : 'carga total', cabo, temps, quedaMax);
     if (trafo) {
       const primV = trafo.primV || Number(rede.tensao) || 220;
-      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1', cabo, temps);
+      trechos.t2 = dimensionarTrecho(tp.t2, trafo.disjuntor, primV, trafo.primLig || '2F+T', infraDe(tp.t2), num((tp.t2 || {}).I) != null ? 'corrente informada' : 'igual ao trecho 1', cabo, temps, quedaMax);
       const secLig = trafo.secLig || '3F+N+T';
       trechos.t3 = dimensionarTrecho(tp.t3, I3, secVTrafo, secLig, infraDe(tp.t3),
-        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'), cabo, temps);
+        num((tp.t3 || {}).I) != null ? 'corrente informada' : (totalKw > 0 ? `P / (V × √3) = ${fmt(totalKw * 1000)} / (${secVTrafo} × √3)` : 'P / (V × √3)'), cabo, temps, quedaMax);
     }
   }
 
-  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, cabo, temps, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
+  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, cabo, temps, quedaMax, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
 }
 
 function num(v) {
@@ -657,5 +663,5 @@ function fmt(n, casas) {
 window.Calc = {
   calcularProjeto, calcularPonto, fmt, num, ligacaoPonto, descCabo, terraSecao,
   ELETRODUTOS, ELETROCALHAS, SECOES, DIAMETRO_EXTERNO, DPS_TENSAO, POTENCIAS, INFRAS,
-  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP, CABOS,
+  KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP, CABOS, QUEDA_MAX,
 };
