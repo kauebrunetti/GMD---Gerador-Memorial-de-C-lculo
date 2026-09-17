@@ -703,27 +703,10 @@
   }
   function etapasNavHtml() {
     const ultima = etapaAtual >= ETAPAS.length;
-    const bloq = pendenciasDaEtapa(etapaAtual).length > 0;
     return `<div class="etapas-nav">
       <button type="button" class="etapa-btn" data-nav="ant"${etapaAtual <= 1 ? ' disabled' : ''}>‹ Anterior</button>
-      <button type="button" class="etapa-btn pri${bloq ? ' bloqueado' : ''}" data-nav="${ultima ? 'fim' : 'prox'}"${bloq ? ' title="Complete esta etapa para avançar"' : ''}>${ultima ? 'Concluir ✓' : 'Próximo ›'}</button>
+      <button type="button" class="etapa-btn pri" data-nav="${ultima ? 'fim' : 'prox'}">${ultima ? 'Concluir ✓' : 'Próximo ›'}</button>
     </div>`;
-  }
-  // Só avança quando a etapa atual (e as intermediárias) não têm pendência
-  function pendenciasDaEtapa(n) { return listarPendencias().filter(x => x.sec === n); }
-  function etapaBloqueante(destino) {
-    for (let k = etapaAtual; k < destino; k++) if (pendenciasDaEtapa(k).length) return k;
-    return 0;
-  }
-  function avisarEtapaIncompleta(k) {
-    if (k !== etapaAtual) irEtapa(k, false);
-    const L = pendenciasDaEtapa(k);
-    pendAberta = true; renderPendencias();
-    setStatus(`⚠ Complete a etapa ${k} antes de avançar: ${L.map(x => x.texto).join(', ')}.`);
-    const btn = $form.querySelector('[data-nav="prox"], [data-nav="fim"]');
-    if (btn) { btn.classList.remove('tremer'); void btn.offsetWidth; btn.classList.add('tremer'); }
-    const el = L[0] && L[0].chave ? $form.querySelector(`[data-chave="${L[0].chave}"]`) : null;
-    if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); }
   }
   function aplicarEtapa() {
     $form.querySelectorAll('details[data-sec]').forEach(d => {
@@ -759,11 +742,9 @@
   }
   $form.addEventListener('click', (e) => {
     if (e.target.closest('summary')) { e.preventDefault(); return; }
-    const pt = e.target.closest('.etapa-pt');
-    if (pt) { const n = +pt.dataset.etapa, k = n > etapaAtual ? etapaBloqueante(n) : 0; if (k) avisarEtapaIncompleta(k); else irEtapa(n); return; }
+    const pt = e.target.closest('.etapa-pt'); if (pt) { irEtapa(+pt.dataset.etapa); return; }
     const nav = e.target.closest('[data-nav]'); if (!nav) return;
     if (nav.dataset.nav === 'ant') irEtapa(etapaAtual - 1);
-    else if (pendenciasDaEtapa(etapaAtual).length) avisarEtapaIncompleta(etapaAtual);
     else if (nav.dataset.nav === 'prox') irEtapa(etapaAtual + 1);
     else { pendAberta = true; renderPendencias(); const painel = document.getElementById('painel-form'); if (painel) painel.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
@@ -1169,15 +1150,11 @@
       + (L.length && pendAberta ? `<div class="pend-lista">${L.map(x => `<div class="pend-item" data-sec="${x.sec}" data-chave="${esc(x.chave)}"><span class="pend-sec">${x.sec ? 'Seção ' + x.sec : 'Doc.'}</span><span>${esc(x.texto)}</span></div>`).join('')}</div>` : '');
     marcarEtapasPendentes(L);
   }
-  // Na barra de etapas, pinta de vermelho as seções que ainda têm pendência
+  // Contador de pendências na barra de etapas (a navegação é livre)
   function marcarEtapasPendentes(L) {
     L = L || listarPendencias();
-    const secs = new Set(L.map(x => String(x.sec)));
-    $form.querySelectorAll('.etapa-pt').forEach(b => b.classList.toggle('falta', secs.has(b.dataset.etapa)));
     const r = $form.querySelector('.etapas-pend');
-    if (r) { r.textContent = L.length ? `${L.length} pendência(s)` : 'Sem pendências'; r.classList.toggle('falta', L.length > 0); }
-    const prox = $form.querySelector('[data-nav="prox"], [data-nav="fim"]');
-    if (prox) { const b = secs.has(String(etapaAtual)); prox.classList.toggle('bloqueado', b); prox.title = b ? 'Complete esta etapa para avançar' : ''; }
+    if (r) r.textContent = L.length ? `${L.length} pendência(s)` : 'Sem pendências';
   }
   let cliqueNasPendencias = false; // o clique re-renderiza a lista; evita que o fechamento global a feche na hora
   if ($pend) $pend.addEventListener('click', (e) => {

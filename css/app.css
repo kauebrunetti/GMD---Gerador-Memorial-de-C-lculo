@@ -215,6 +215,15 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .main {
   display: grid; grid-template-columns: 440px 1fr;
   flex: 1; min-height: 0;
+  /* "papel de parede" suave em toda a área: é o que o vidro do card desfoca e refrata */
+  background:
+    radial-gradient(640px 460px at 0% -6%, rgba(140, 208, 127, .48), transparent 62%),
+    radial-gradient(420px 360px at 26% 46%, rgba(243, 210, 122, .30), transparent 62%),
+    radial-gradient(520px 420px at 52% 18%, rgba(58, 170, 53, .20), transparent 60%),
+    radial-gradient(640px 480px at 8% 104%, rgba(255, 255, 255, .98), transparent 60%),
+    radial-gradient(620px 520px at 92% 100%, rgba(27, 28, 27, .16), transparent 62%),
+    radial-gradient(520px 420px at 100% 8%, rgba(243, 210, 122, .26), transparent 60%),
+    linear-gradient(160deg, #EEF2EA 0%, #E3E7DF 100%);
 }
 .painel-form {
   /* card de cristal flutuante: altura do conteúdo (até caber na tela); só o corpo da etapa rola, sem barra visível */
@@ -223,32 +232,28 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
   margin: 18px 4px 18px 18px; padding: 12px 14px 12px; border-radius: 24px;
   position: relative; isolation: isolate;
   /* vidro (Liquid Glass): lâmina translúcida, borda-luz, brilho especular e reflexos internos */
-  background: rgba(255, 255, 255, .34);
-  border: 1px solid rgba(255, 255, 255, .7);
+  background: rgba(255, 255, 255, .22);
+  border: 1px solid rgba(255, 255, 255, .55);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .45),
-    inset 1px 0 0 rgba(255, 255, 255, .6), inset -1px 0 0 rgba(255, 255, 255, .35),
-    0 1px 2px rgba(27, 28, 27, .06), 0 30px 70px rgba(27, 28, 27, .18), 0 0 0 .5px rgba(27, 28, 27, .05);
+    inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .5),
+    inset 1px 0 0 rgba(255, 255, 255, .6), inset -1px 0 0 rgba(255, 255, 255, .4),
+    0 1px 2px rgba(27, 28, 27, .06), 0 30px 70px rgba(27, 28, 27, .20), 0 0 0 .5px rgba(27, 28, 27, .06);
 }
 /* camadas do vidro em pseudo-elementos, para o card não virar "containing block" das listas fixas (combo) */
 .painel-form::before {
-  /* fundo refratado: manchas de cor bem desfocadas, só dentro do vidro */
-  content: ''; position: absolute; inset: -40px; z-index: -2; border-radius: inherit;
-  background:
-    radial-gradient(45% 40% at 12% 8%, rgba(140, 208, 127, .70), transparent 70%),
-    radial-gradient(40% 35% at 92% 28%, rgba(58, 170, 53, .38), transparent 70%),
-    radial-gradient(50% 40% at 25% 96%, rgba(255, 255, 255, .95), transparent 70%),
-    radial-gradient(35% 35% at 88% 92%, rgba(27, 28, 27, .12), transparent 70%),
-    radial-gradient(60% 60% at 60% 55%, rgba(255, 255, 255, .55), transparent 70%);
-  filter: blur(34px) saturate(150%);
+  /* desfoque real do papel de parede atrás do card */
+  content: ''; position: absolute; inset: 0; z-index: -2; border-radius: inherit;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.06); backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
 }
 .painel-form::after {
   /* brilho especular diagonal + halo claro nas bordas (refração) */
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(118deg, rgba(255, 255, 255, .62) 0%, rgba(255, 255, 255, .18) 28%, rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, .06) 66%, rgba(255, 255, 255, .40) 100%);
+  background: linear-gradient(118deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .14) 26%, rgba(255, 255, 255, 0) 44%, rgba(255, 255, 255, .04) 64%, rgba(255, 255, 255, .34) 100%);
+  /* "lente" nas bordas: claro em cima/esquerda, sombra fina embaixo/direita */
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .5), inset 0 0 30px rgba(255, 255, 255, .6),
-    inset 0 -16px 26px -20px rgba(27, 28, 27, .22), inset 0 18px 26px -22px rgba(255, 255, 255, 1);
+    inset 0 0 0 1px rgba(255, 255, 255, .55), inset 0 0 34px rgba(255, 255, 255, .45),
+    inset 3px 3px 10px rgba(255, 255, 255, .85), inset -3px -3px 10px rgba(27, 28, 27, .10),
+    inset 0 -18px 28px -22px rgba(27, 28, 27, .28), inset 0 22px 28px -24px rgba(255, 255, 255, 1);
 }
 #form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .painel-preview {
@@ -257,8 +262,8 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 
 /* ── Formulário: cards de vidro (Liquid Glass) ─────────────── */
 .vidro, details, .btn-recolher {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .46));
-  border: 1px solid rgba(255, 255, 255, .95);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .52), rgba(255, 255, 255, .34));
+  border: 1px solid rgba(255, 255, 255, .85);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .95),
     0 1px 2px rgba(27, 28, 27, .05),
@@ -299,14 +304,12 @@ details.mais .sec-body { -webkit-mask-image: linear-gradient(to bottom, #000 cal
 }
 .etapa-pt:hover { transform: scaleY(1.6); background: var(--green-l); }
 .etapa-pt.ok { background: var(--green); }
-.etapa-pt.falta { background: #E07B70; }
 .etapa-pt.atual { background: var(--ink); }
 .etapas-rot {
   display: flex; justify-content: space-between; margin-top: 8px;
   font-family: Oswald, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--g2);
 }
-.etapas-pend { color: var(--green-d); }
-.etapas-pend.falta { color: #C0392B; }
+.etapas-pend { color: var(--g2); }
 .etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; }
 .etapa-btn {
   flex: 1; font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500;
@@ -323,10 +326,7 @@ details.mais .sec-body { -webkit-mask-image: linear-gradient(to bottom, #000 cal
   box-shadow: 0 6px 16px rgba(58, 170, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .3);
 }
 .etapa-btn.pri:hover { color: #fff; filter: brightness(1.06); }
-.etapa-btn.pri.bloqueado { opacity: .5; cursor: not-allowed; box-shadow: none; }
-.etapa-btn.pri.bloqueado:hover { filter: none; }
-.etapa-btn.tremer { animation: tremer .35s; }
-@keyframes tremer { 20% { transform: translateX(-5px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } 100% { transform: none; } }
+
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px; }
 .campo { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .grid2 .campo { margin-bottom: 0; }
@@ -340,7 +340,7 @@ details.mais .sec-body { -webkit-mask-image: linear-gradient(to bottom, #000 cal
 .campo-hint strong { color: var(--green-d); }
 input, select, textarea {
   font-family: Montserrat, sans-serif; font-size: 12.5px; color: var(--ink);
-  border: 1px solid rgba(27, 28, 27, .12); background: rgba(255, 255, 255, .85); padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, .9); background: rgba(255, 255, 255, .62); padding: 9px 11px;
   width: 100%; border-radius: 10px;
   box-shadow: inset 0 1px 2px rgba(27, 28, 27, .04);
   transition: border-color .15s, box-shadow .15s;
