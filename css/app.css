@@ -216,7 +216,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
   display: grid; grid-template-columns: 440px 1fr;
   flex: 1; min-height: 0;
   /* foto de fundo (estação BeGreen): é o que o vidro do card desfoca e refrata */
-  background: url(../assets/fundo.webp) center 38% / cover no-repeat #cfd3cc;
+  background: url(../assets/fundo.webp) center center / cover no-repeat #cfd3cc;
 }
 .painel-wrap {
   /* card de cristal flutuante: altura do conteúdo (até caber na tela) */
