@@ -1472,17 +1472,88 @@
   // Menu "Novo": em branco ou a partir de um modelo
   const $painelNovo = document.getElementById('painel-novo');
   function renderMenuNovo() {
-    const oficiais = modelos.filter(m => m.oficial), proprios = modelos.filter(m => !m.oficial);
-    const item = (m) => `<div class="menu-item" data-modelo="${m.id}"><span class="nome">${esc(m.nome)}</span>${m.oficial ? '<span class="menu-tag">oficial</span>' : `<button type="button" class="btn-mini" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>`}</div>`;
+    const oficiais = modelos.filter(m => m.oficial).length, proprios = modelos.length - oficiais;
     $painelNovo.innerHTML = `<div class="menu-item" data-acao="branco"><span class="nome">Projeto em branco</span></div>
-      <div class="menu-titulo">Modelos oficiais BeGreen</div>
-      ${oficiais.length ? oficiais.map(item).join('') : '<div class="menu-vazio">Modelos oficiais ficam disponíveis com a nuvem conectada.</div>'}
-      <div class="menu-titulo">Modelos do time</div>
-      ${proprios.length ? proprios.map(item).join('') : '<div class="menu-vazio">Nenhum modelo do time ainda.</div>'}
-      <div class="menu-item destaque" data-acao="salvar-modelo"><span class="nome">+ Salvar o projeto atual como modelo…</span></div>
+      <div class="menu-item destaque" data-acao="modelos"><span class="nome">A partir de um modelo…</span><span class="menu-tag">${oficiais + proprios}</span></div>
+      <div class="menu-titulo">Biblioteca</div>
+      <div class="menu-item" data-acao="salvar-modelo"><span class="nome">Salvar o projeto atual como modelo…</span></div>
       <div class="menu-item" data-acao="catalogo"><span class="nome">Catálogo de equipamentos…</span></div>
       ${usuarioAtual && usuarioAtual.papel === 'admin' ? '<div class="menu-item" data-acao="equipe"><span class="nome">Equipe (quem pode entrar)…</span></div>' : ''}`;
   }
+
+  // ── Biblioteca de modelos: busca e escolha em janela própria ──
+  let modelosFiltro = '';
+  function resumoModelo(m) {
+    const d = m.dados || {};
+    const cg = (d.carregadores || []);
+    const pots = Array.from(new Set(cg.map(x => x.potencia).filter(Boolean)));
+    const partes = [
+      cg.length ? `${cg.length} × ${pots.length === 1 ? fmt(Number(pots[0])) + ' kW' : 'potências variadas'}` : null,
+      d.tensao ? `${d.tensao} V · ${d.config || ''}`.trim() : null,
+      d.transformador === 'sim' ? 'com transformador' : null,
+      d.quadroDistribuicao === 'sim' ? 'com QDA' : 'sem QDA',
+      d.trecho4Modo === 'agrupado' ? 'circuitos agrupados' : null,
+      cg.some(x => x.modelo) ? esc(cg[0].modelo) : null,
+    ].filter(Boolean);
+    return partes.join(' · ');
+  }
+  function listaModelosHtml() {
+    const q = semAcento(modelosFiltro).trim();
+    const casa = (m) => !q || semAcento(`${m.nome} ${resumoModelo(m)}`).includes(q);
+    const grupos = [
+      ['Modelos oficiais BeGreen', modelos.filter(m => m.oficial && casa(m)), 'Modelos oficiais ficam disponíveis com a nuvem conectada.'],
+      ['Modelos do time', modelos.filter(m => !m.oficial && casa(m)), 'Nenhum modelo do time ainda. Use "Salvar o projeto atual como modelo".'],
+    ];
+    const total = grupos.reduce((a, g) => a + g[1].length, 0);
+    if (q && !total) return `<div class="mod-vazio">Nenhum modelo encontrado para "${esc(modelosFiltro)}".</div>`;
+    return grupos.map(([titulo, lista, vazio]) => `<div class="mod-grupo">${titulo}<span>${lista.length}</span></div>`
+      + (lista.length ? lista.map(m => `<div class="mod-item" data-modelo="${m.id}">
+          <div class="mod-info"><div class="mod-nome">${esc(m.nome)}</div><div class="mod-det">${resumoModelo(m)}</div></div>
+          ${m.oficial ? '<span class="menu-tag">oficial</span>' : `<button type="button" class="btn-mini" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>`}
+          <button type="button" class="btn-mini usar" data-usar="${m.id}">usar</button>
+        </div>`).join('') : `<div class="mod-vazio">${q ? 'Nenhum resultado neste grupo.' : vazio}</div>`)).join('');
+  }
+  function abrirModelos(foco) {
+    abrirModal('Modelos de projeto', `
+      <input type="search" id="mod-busca" class="mod-busca" placeholder="Buscar modelo: nome, potência, tensão, QDA…" value="${esc(modelosFiltro)}" autocomplete="off" />
+      <div id="mod-lista" class="mod-lista">${listaModelosHtml()}</div>
+      <p class="mod-rodape">Um modelo cria um projeto novo com os mesmos parâmetros, sem cliente, fotos e ART. Os oficiais são mantidos pela BeGreen e não podem ser excluídos.</p>`);
+    const b = document.getElementById('mod-busca');
+    if (b) b.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      const primeiro = document.querySelector('#mod-lista .mod-item');
+      if (primeiro) primeiro.querySelector('[data-usar]').click();
+    });
+    if (b && foco !== false) setTimeout(() => b.focus(), 30);
+  }
+  function atualizarListaModelos() {
+    const el = document.getElementById('mod-lista');
+    if (el) el.innerHTML = listaModelosHtml();
+  }
+  document.getElementById('modal-corpo').addEventListener('input', (e) => {
+    if (e.target.id === 'mod-busca') { modelosFiltro = e.target.value; atualizarListaModelos(); }
+  });
+  document.getElementById('modal-corpo').addEventListener('click', (e) => {
+    const ex = e.target.closest('[data-excluir-modelo]');
+    if (ex) {
+      const m = modelos.find(x => x.id === ex.dataset.excluirModelo);
+      if (!confirm(`Excluir o modelo "${m ? m.nome : ''}"? Ele deixa de aparecer para todo o time.`)) return;
+      modelos = modelos.filter(x => x.id !== ex.dataset.excluirModelo);
+      gravarLS(LS_MODELOS, modelos);
+      if (nuvemAtiva()) window.Sync.excluirModelo(ex.dataset.excluirModelo).catch(err => nuvemOk(false, err));
+      atualizarListaModelos();
+      return;
+    }
+    const alvo = e.target.closest('[data-usar]') || e.target.closest('.mod-item');
+    if (!alvo) return;
+    const id = alvo.dataset.usar || alvo.dataset.modelo;
+    const m = modelos.find(x => x.id === id);
+    if (!m) return;
+    fecharModal();
+    registrarNovo(clonarProjeto(m.dados, true), true, 'modelo: ' + m.nome);
+    setStatus(`Projeto criado a partir do modelo "${m.nome}".`);
+  });
   document.getElementById('btn-novo').addEventListener('click', (e) => {
     e.stopPropagation();
     const aberto = $painelNovo.style.display !== 'none';
@@ -1505,6 +1576,9 @@
     $painelNovo.style.display = 'none';
     if (item.dataset.acao === 'branco') {
       registrarNovo(novoProjeto(), true, 'branco');
+    } else if (item.dataset.acao === 'modelos') {
+      modelosFiltro = '';
+      abrirModelos();
     } else if (item.dataset.acao === 'catalogo') {
       abrirCatalogo();
     } else if (item.dataset.acao === 'equipe') {
@@ -1519,7 +1593,7 @@
       modelos.push(m);
       gravarLS(LS_MODELOS, modelos);
       if (nuvemAtiva()) window.Sync.salvarModelo({ id: m.id, nome: m.nome, dados: m.dados, oficial: false, ordem: 100, gestor: gestorAtual() }).then(() => nuvemOk(true)).catch(e => nuvemOk(false, e));
-      setStatus(`Modelo "${nome.trim()}" salvo. Ele aparece no menu Novo.`);
+      setStatus(`Modelo "${nome.trim()}" salvo e disponível para o time em Novo ▾ → A partir de um modelo.`);
     } else if (item.dataset.modelo) {
       const m = modelos.find(x => x.id === item.dataset.modelo);
       if (!m) return;
