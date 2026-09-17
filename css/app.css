@@ -94,7 +94,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .metr-card span { font-size: 10px; color: var(--g1); }
 
 /* ── Fluxo de aprovação ───────────────────────────────────── */
-.fluxo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 12px; font-size: 11px; color: var(--tx2); }
+.fluxo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; margin-top: 8px; font-size: 10.5px; color: var(--tx2); }
 .fluxo-status { font-family: Oswald, sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; background: rgba(27, 28, 27, .07); color: var(--g1); }
 .fluxo.revisado .fluxo-status { background: #FFF3D6; color: #8a6d1d; }
 .fluxo.emitido .fluxo-status { background: var(--resumo); color: var(--green-d); }
@@ -161,7 +161,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .menu-vazio { padding: 8px 12px; font-size: 11px; color: var(--g2); }
 
 /* ── Pendências antes de emitir ───────────────────────────── */
-#pendencias { margin-bottom: 12px; overflow: hidden; }
+#pendencias { margin-top: 10px; overflow: hidden; flex: none; }
 .pend-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; cursor: pointer;
   font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
@@ -171,7 +171,8 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 .pend-head > span:first-of-type, .pend-head > b { flex: 1; }
 #pendencias.ok .pend-head { background: rgba(58, 170, 53, .12); color: var(--green-d); cursor: default; }
 #pendencias.ok .pend-head::before { background: var(--green); box-shadow: 0 0 0 3px rgba(58, 170, 53, .2); }
-.pend-lista { padding: 4px 0; max-height: 200px; overflow: auto; }
+.pend-lista { padding: 4px 0; max-height: 150px; overflow-y: auto; scrollbar-width: none; }
+.pend-lista::-webkit-scrollbar { display: none; }
 .pend-item { display: flex; gap: 8px; padding: 5px 12px; font-size: 11px; color: var(--tx2); cursor: pointer; }
 .pend-item:hover { background: var(--bg2); color: var(--ink); }
 .pend-sec { font-family: Oswald, sans-serif; font-size: 9px; letter-spacing: .1em; color: var(--g2); min-width: 44px; padding-top: 2px; text-transform: uppercase; }
@@ -202,21 +203,35 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 
 /* ── Layout: formulário + preview ───────────────────────── */
 .main {
-  display: grid; grid-template-columns: 420px 1fr;
+  display: grid; grid-template-columns: 440px 1fr;
   height: calc(100vh - 64px);
   /* fundo do painel de parâmetros: manchas suaves atrás dos cards de vidro */
   background:
-    radial-gradient(260px 220px at 8% 6%, rgba(58, 170, 53, .22), transparent 70%),
-    radial-gradient(240px 240px at 96% 34%, rgba(140, 208, 127, .26), transparent 70%),
-    radial-gradient(300px 260px at 20% 78%, rgba(46, 140, 42, .12), transparent 70%),
-    radial-gradient(220px 200px at 90% 96%, rgba(27, 28, 27, .10), transparent 70%),
+    radial-gradient(260px 220px at 8% 6%, rgba(58, 170, 53, .34), transparent 70%),
+    radial-gradient(240px 240px at 96% 34%, rgba(140, 208, 127, .40), transparent 70%),
+    radial-gradient(300px 260px at 20% 78%, rgba(46, 140, 42, .20), transparent 70%),
+    radial-gradient(220px 200px at 90% 96%, rgba(27, 28, 27, .14), transparent 70%),
     linear-gradient(180deg, #F3F5F1, #E6E9E3);
-  background-repeat: no-repeat; background-size: 420px 100%;
+  background-repeat: no-repeat; background-size: 440px 100%;
 }
 .painel-form {
-  overflow-y: auto; background: transparent; border-right: 1px solid rgba(255, 255, 255, .7);
-  padding: 14px 16px 16px;
+  /* card de cristal flutuante: altura do conteúdo (até caber na tela); só o corpo da etapa rola, sem barra visível */
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  align-self: start; max-height: calc(100% - 36px);
+  margin: 18px 4px 18px 18px; padding: 12px 14px 12px; border-radius: 24px;
+  position: relative; isolation: isolate;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .72) 0%, rgba(255, 255, 255, .42) 45%, rgba(255, 255, 255, .58) 100%);
+  border: 1px solid rgba(255, 255, 255, .9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(255, 255, 255, .4),
+    0 2px 4px rgba(27, 28, 27, .05), 0 30px 70px rgba(27, 28, 27, .22);
 }
+/* o desfoque fica num pseudo-elemento para não virar "containing block" das listas fixas (combo) */
+.painel-form::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
+}
+#form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .painel-preview {
   overflow-y: auto; padding: 22px;
 }
@@ -231,9 +246,11 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
     0 10px 28px rgba(27, 28, 27, .10);
   border-radius: 16px;
 }
-details { margin-bottom: 12px; overflow: hidden; }
+details { flex: 1; min-height: 0; margin: 0; overflow: hidden; }
 details[hidden] { display: none; }
-details[open] { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 2px 4px rgba(27, 28, 27, .05), 0 16px 36px rgba(27, 28, 27, .14); }
+/* o conteúdo do <details> vive num slot interno (::details-content): ele precisa ser o item flex para o corpo rolar */
+details::details-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+details[open] { display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 1px 2px rgba(27, 28, 27, .04), 0 8px 20px rgba(27, 28, 27, .08); }
 /* No assistente a seção ativa fica sempre aberta: o título vira cabeçalho da etapa */
 summary {
   display: flex; align-items: center; gap: 12px; list-style: none;
@@ -250,7 +267,8 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: 0 4px 10px rgba(58, 170, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .35);
 }
 .sec-sub { font-size: 11.5px; color: var(--g1); margin: 0 0 14px; }
-.sec-body { padding: 0 16px 16px; }
+.sec-body { padding: 0 16px 16px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.sec-body::-webkit-scrollbar, details::-webkit-scrollbar { display: none; }
 
 /* ── Assistente por etapas: barra de progresso e navegação ─── */
 .etapas { margin: 2px 2px 12px; }
@@ -269,10 +287,7 @@ summary::-webkit-details-marker { display: none; }
 }
 .etapas-pend { color: var(--green-d); }
 .etapas-pend.falta { color: #C0392B; }
-.etapas-nav {
-  position: sticky; bottom: 0; display: flex; gap: 10px; margin-top: 4px; padding: 10px 0 4px;
-  background: linear-gradient(180deg, rgba(238, 240, 235, 0), rgba(238, 240, 235, .92) 35%);
-}
+.etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; }
 .etapa-btn {
   flex: 1; font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500;
   letter-spacing: .12em; text-transform: uppercase; padding: 12px; border-radius: 12px; cursor: pointer;
@@ -288,6 +303,10 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: 0 6px 16px rgba(58, 170, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .3);
 }
 .etapa-btn.pri:hover { color: #fff; filter: brightness(1.06); }
+.etapa-btn.pri.bloqueado { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.etapa-btn.pri.bloqueado:hover { filter: none; }
+.etapa-btn.tremer { animation: tremer .35s; }
+@keyframes tremer { 20% { transform: translateX(-5px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } 100% { transform: none; } }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px; }
 .campo { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .grid2 .campo { margin-bottom: 0; }
@@ -458,18 +477,18 @@ textarea { resize: vertical; }
 /* ── Painel de parâmetros recolhível ───────────────────── */
 .painel-form { position: relative; }
 .btn-recolher {
-  width: 100%; margin-bottom: 12px;
-  font-family: Oswald, sans-serif; font-size: 10px; font-weight: 500;
+  width: 100%; margin-bottom: 10px; flex: none;
+  font-family: Oswald, sans-serif; font-size: 9.5px; font-weight: 500;
   letter-spacing: .12em; text-transform: uppercase; color: var(--g1);
-  cursor: pointer; padding: 8px 14px; text-align: left; border-radius: 999px;
+  cursor: pointer; padding: 6px 12px; text-align: left; border-radius: 999px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 2px 8px rgba(27, 28, 27, .07);
 }
 .btn-recolher:hover { color: var(--green-d); }
 .btn-expandir { display: none; }
 
 .main.recolhido { grid-template-columns: 44px 1fr; background-size: 44px 100%; }
-.main.recolhido .painel-form { padding: 0; overflow: hidden; }
-.main.recolhido #form, .main.recolhido .btn-recolher { display: none; }
+.main.recolhido .painel-form { padding: 0; margin: 0; overflow: hidden; border-radius: 0; background: transparent; border: 0; box-shadow: none; }
+.main.recolhido #form, .main.recolhido .btn-recolher, .main.recolhido #fluxo, .main.recolhido #pendencias { display: none; }
 .main.recolhido .btn-expandir {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   width: 44px; height: 100%; border: none; background: var(--bg2);
