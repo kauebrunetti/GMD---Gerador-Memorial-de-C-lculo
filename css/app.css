@@ -284,6 +284,8 @@ textarea { resize: vertical; }
 .mod-item .btn-mini.usar { color: var(--green-d); border-color: var(--green); }
 .mod-item .btn-mini.usar:hover { background: var(--green); color: #fff; }
 .mod-vazio { padding: 12px; font-size: 11px; color: var(--g2); }
+.mod-acoes { display: flex; justify-content: flex-end; margin-top: 10px; }
+.mod-acoes .btn { padding: 8px 14px; }
 .mod-rodape { font-size: 10.5px; color: var(--g2); line-height: 1.5; margin: 10px 0 0; }
 
 /* ── Seletor de modelo (catálogo) ─────────────────────────── */

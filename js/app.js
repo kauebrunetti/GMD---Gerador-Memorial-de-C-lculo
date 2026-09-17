@@ -146,15 +146,31 @@
     if (!(projeto.gestor || '').trim()) projeto.gestor = gestorAtual(); // quem elabora entra no controle do documento
     clearTimeout(salvarTimer);
     salvarTimer = setTimeout(() => {
-      try {
-        try { projeto.pendenciasSalvas = listarPendencias().map(x => x.texto); } catch (e) { /* antes do preview */ }
-        localStorage.setItem(LS_KEY, JSON.stringify(projetos));
-        setStatus('Salvo automaticamente · ' + new Date().toLocaleTimeString('pt-BR'));
-        enviarProjeto(projeto);
-      } catch (e) {
-        setStatus('⚠ Não foi possível salvar: armazenamento cheio. Remova fotos.');
-      }
+      try { projeto.pendenciasSalvas = listarPendencias().map(x => x.texto); } catch (e) { /* antes do preview */ }
+      enviarProjeto(projeto); // a nuvem é a cópia principal e guarda as fotos
+      const local = guardarCache();
+      setStatus(local
+        ? 'Salvo automaticamente · ' + new Date().toLocaleTimeString('pt-BR')
+        : (nuvemAtiva()
+          ? 'Salvo na nuvem · ' + new Date().toLocaleTimeString('pt-BR') + ' (cache deste navegador cheio)'
+          : '⚠ Não foi possível salvar: armazenamento do navegador cheio. Remova fotos ou conecte a nuvem.'));
     }, 400);
+  }
+
+  // O cache do navegador guarda os projetos sem o conteúdo das fotos: elas são
+  // grandes (centenas de kB cada) e estouram o limite do localStorage.
+  function semFotos(p) {
+    if (!p.fotos || !p.fotos.length) return p;
+    return Object.assign({}, p, { fotos: p.fotos.map(f => ({ legenda: f.legenda || '', data: '' })) });
+  }
+  function guardarCache() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(projetos.map(semFotos)));
+      return true;
+    } catch (e) {
+      try { localStorage.removeItem(LS_KEY); } catch (e2) { /* ignora */ }
+      return false;
+    }
   }
   function setStatus(t) { const el = document.getElementById('status-texto'); if (el) el.textContent = t; }
 
@@ -202,7 +218,7 @@
         previewTimer = setTimeout(renderPreview, 100);
       }
       p.atualizadoEm = new Date().toISOString();
-      try { localStorage.setItem(LS_KEY, JSON.stringify(projetos)); } catch (e) { /* ignora */ }
+      try { guardarCache(); } catch (e) { /* ignora */ }
       enviarProjeto(p);
     } catch (e) { nuvemOk(false, e); }
   }
@@ -241,7 +257,7 @@
         const idAtual = projeto.id;
         projetos = mesclados.sort((a, b) => (a.atualizadoEm || '').localeCompare(b.atualizadoEm || ''));
         projeto = projetos.find(x => x.id === idAtual) || projetos[projetos.length - 1];
-        try { localStorage.setItem(LS_KEY, JSON.stringify(projetos)); } catch (e) { /* ignora */ }
+        try { guardarCache(); } catch (e) { /* ignora */ }
       }
       // Modelos (oficiais primeiro); cria os oficiais na primeira vez
       modelos = (mods || []).map(m => ({ id: m.id, nome: m.nome, dados: m.dados, oficial: !!m.oficial, ordem: m.ordem }));
@@ -1377,7 +1393,7 @@
       <table class="tab"><tbody>${topPend.map(([t, n]) => `<tr><td>${esc(t)}</td><td style="width:60px;text-align:right">${n}</td></tr>`).join('') || '<tr><td>Nenhuma pendência registrada.</td></tr>'}</tbody></table>
       <p style="font-size:10.5px;color:var(--g2);margin:6px 0 0">${nuvemAtiva() ? 'Dados da nuvem compartilhada (Supabase).' : 'Dados só deste navegador (nuvem desativada).'}</p>`);
   }
-  document.getElementById('btn-metricas').addEventListener('click', abrirMetricas);
+
 
   // ── Histórico de projetos (painel pesquisável) ─────────────
   const $painel = document.getElementById('painel-projetos');
@@ -1459,7 +1475,7 @@
       if (nuvemAtiva()) window.Sync.excluirProjeto(del.dataset.id).then(() => nuvemOk(true)).catch(e => nuvemOk(false, e));
       if (!projetos.length) projetos.push(novoProjeto());
       if (!projetos.find(p => p.id === projeto.id)) projeto = projetos[projetos.length - 1];
-      localStorage.setItem(LS_KEY, JSON.stringify(projetos));
+      guardarCache();
       renderLista($busca.value); renderTudo(); atualizarProjetoAtual();
       return;
     }
@@ -1472,12 +1488,16 @@
   // Menu "Novo": em branco ou a partir de um modelo
   const $painelNovo = document.getElementById('painel-novo');
   function renderMenuNovo() {
-    const oficiais = modelos.filter(m => m.oficial).length, proprios = modelos.length - oficiais;
-    $painelNovo.innerHTML = `<div class="menu-item" data-acao="branco"><span class="nome">Projeto em branco</span></div>
-      <div class="menu-item destaque" data-acao="modelos"><span class="nome">A partir de um modelo…</span><span class="menu-tag">${oficiais + proprios}</span></div>
-      <div class="menu-titulo">Biblioteca</div>
+    $painelNovo.innerHTML = `<div class="menu-titulo">Projeto</div>
+      <div class="menu-item" data-acao="branco"><span class="nome">Novo em branco</span></div>
+      <div class="menu-item destaque" data-acao="modelos"><span class="nome">Novo a partir de um modelo…</span><span class="menu-tag">${modelos.length}</span></div>
+      <div class="menu-item" data-acao="duplicar"><span class="nome">Duplicar este projeto</span></div>
+      <div class="menu-item" data-acao="baixar"><span class="nome">Baixar HTML</span></div>
+      <div class="menu-titulo">Biblioteca do time</div>
       <div class="menu-item" data-acao="salvar-modelo"><span class="nome">Salvar o projeto atual como modelo…</span></div>
       <div class="menu-item" data-acao="catalogo"><span class="nome">Catálogo de equipamentos…</span></div>
+      <div class="menu-titulo">Time</div>
+      <div class="menu-item" data-acao="metricas"><span class="nome">Métricas</span></div>
       ${usuarioAtual && usuarioAtual.papel === 'admin' ? '<div class="menu-item" data-acao="equipe"><span class="nome">Equipe (quem pode entrar)…</span></div>' : ''}`;
   }
 
@@ -1509,14 +1529,32 @@
     return grupos.map(([titulo, lista, vazio]) => `<div class="mod-grupo">${titulo}<span>${lista.length}</span></div>`
       + (lista.length ? lista.map(m => `<div class="mod-item" data-modelo="${m.id}">
           <div class="mod-info"><div class="mod-nome">${esc(m.nome)}</div><div class="mod-det">${resumoModelo(m)}</div></div>
-          ${m.oficial ? '<span class="menu-tag">oficial</span>' : `<button type="button" class="btn-mini" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>`}
+          ${m.oficial ? '<span class="menu-tag">oficial</span>' : ''}
+          ${(!m.oficial || (usuarioAtual && usuarioAtual.papel === 'admin')) ? `<button type="button" class="btn-mini" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>` : ''}
           <button type="button" class="btn-mini usar" data-usar="${m.id}">usar</button>
         </div>`).join('') : `<div class="mod-vazio">${q ? 'Nenhum resultado neste grupo.' : vazio}</div>`)).join('');
   }
+  // Cria um modelo a partir do projeto aberto (sem cliente, fotos e ART)
+  function salvarComoModelo() {
+    const cg = projeto.carregadores[0] || {};
+    const sugestao = `${projeto.carregadores.length} × ${cg.potencia || '?'} kW · ${projeto.tensao} V ${projeto.config}${projeto.transformador === 'sim' ? ' · com transformador' : ''}${projeto.quadroDistribuicao === 'sim' ? ' · QDA' : ''}`;
+    const nome = prompt('Nome do modelo (como vai aparecer na biblioteca):', sugestao);
+    if (!nome || !nome.trim()) return null;
+    const dados = clonarProjeto(projeto, true, { docNum: 'BG-ME-XX-XXXX' });
+    dados.status = 'rascunho'; dados.gestor = ''; dados.fotos = [];
+    const m = { id: novoId(), nome: nome.trim(), criadoEm: new Date().toISOString(), dados, oficial: false, ordem: 100 };
+    modelos.push(m);
+    gravarLS(LS_MODELOS, modelos);
+    if (nuvemAtiva()) window.Sync.salvarModelo({ id: m.id, nome: m.nome, dados: m.dados, oficial: false, ordem: 100, gestor: gestorAtual() }).then(() => nuvemOk(true)).catch(e => nuvemOk(false, e));
+    setStatus(`Modelo "${m.nome}" salvo e disponível para o time.`);
+    return m;
+  }
+
   function abrirModelos(foco) {
     abrirModal('Modelos de projeto', `
       <input type="search" id="mod-busca" class="mod-busca" placeholder="Buscar modelo: nome, potência, tensão, QDA…" value="${esc(modelosFiltro)}" autocomplete="off" />
       <div id="mod-lista" class="mod-lista">${listaModelosHtml()}</div>
+      <div class="mod-acoes"><button type="button" class="btn primario" id="mod-novo">+ Salvar o projeto atual como modelo</button></div>
       <p class="mod-rodape">Um modelo cria um projeto novo com os mesmos parâmetros, sem cliente, fotos e ART. Os oficiais são mantidos pela BeGreen e não podem ser excluídos.</p>`);
     const b = document.getElementById('mod-busca');
     if (b) b.addEventListener('keydown', (ev) => {
@@ -1535,6 +1573,11 @@
     if (e.target.id === 'mod-busca') { modelosFiltro = e.target.value; atualizarListaModelos(); }
   });
   document.getElementById('modal-corpo').addEventListener('click', (e) => {
+    if (e.target.id === 'mod-novo') {
+      const m = salvarComoModelo();
+      if (m) { modelosFiltro = ''; abrirModelos(false); }
+      return;
+    }
     const ex = e.target.closest('[data-excluir-modelo]');
     if (ex) {
       const m = modelos.find(x => x.id === ex.dataset.excluirModelo);
@@ -1579,21 +1622,18 @@
     } else if (item.dataset.acao === 'modelos') {
       modelosFiltro = '';
       abrirModelos();
+    } else if (item.dataset.acao === 'duplicar') {
+      duplicarAtual();
+    } else if (item.dataset.acao === 'baixar') {
+      baixarHtmlAtual();
+    } else if (item.dataset.acao === 'metricas') {
+      abrirMetricas();
     } else if (item.dataset.acao === 'catalogo') {
       abrirCatalogo();
     } else if (item.dataset.acao === 'equipe') {
       abrirEquipe();
     } else if (item.dataset.acao === 'salvar-modelo') {
-      const sugestao = `${projeto.carregadores.length} × ${projeto.carregadores[0].potencia || '?'} kW · ${projeto.tensao} V ${projeto.config}${projeto.transformador === 'sim' ? ' · com trafo' : ''}`;
-      const nome = prompt('Nome do modelo (como vai aparecer no menu Novo):', sugestao);
-      if (!nome || !nome.trim()) return;
-      const dados = clonarProjeto(projeto, true, { docNum: 'BG-ME-XX-XXXX' });
-      dados.status = 'rascunho'; dados.gestor = '';
-      const m = { id: novoId(), nome: nome.trim(), criadoEm: new Date().toISOString(), dados, oficial: false, ordem: 100 };
-      modelos.push(m);
-      gravarLS(LS_MODELOS, modelos);
-      if (nuvemAtiva()) window.Sync.salvarModelo({ id: m.id, nome: m.nome, dados: m.dados, oficial: false, ordem: 100, gestor: gestorAtual() }).then(() => nuvemOk(true)).catch(e => nuvemOk(false, e));
-      setStatus(`Modelo "${nome.trim()}" salvo e disponível para o time em Novo ▾ → A partir de um modelo.`);
+      salvarComoModelo();
     } else if (item.dataset.modelo) {
       const m = modelos.find(x => x.id === item.dataset.modelo);
       if (!m) return;
@@ -1602,12 +1642,11 @@
       setStatus(`Projeto criado a partir do modelo "${m.nome}".`);
     }
   });
-  document.getElementById('btn-duplicar').addEventListener('click', () => {
+  function duplicarAtual() {
     const origem = projeto;
-    const p = clonarProjeto(origem, true);
-    registrarNovo(p, true, 'duplicado');
+    registrarNovo(clonarProjeto(origem, true), true, 'duplicado');
     setStatus(`Cópia de "${origem.cliente || origem.docNum}" criada. Informe o novo cliente.`);
-  });
+  }
 
   // ── Exportação ─────────────────────────────────────────────
   // Nome padronizado: BG-ME-25-0812_Rev00_Jardim-das-Acacias.pdf
@@ -1695,7 +1734,7 @@ ${corpo}
       a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
   }
-  document.getElementById('btn-baixar').addEventListener('click', async () => {
+  async function baixarHtmlAtual() {
     if (bloqueadoPorPendencias('O HTML')) return;
     setStatus('Gerando documento…');
     try {
@@ -1704,7 +1743,7 @@ ${corpo}
     } catch (err) {
       setStatus('⚠ Falha ao gerar o download: ' + err.message);
     }
-  });
+  }
 
   // ── Painel de parâmetros recolhível ────────────────────────
   const LS_RECOLHIDO = 'begreen-parametros-recolhidos';
