@@ -1508,10 +1508,10 @@
     if (q && !total) return `<div class="mod-vazio">Nenhum modelo encontrado para "${esc(modelosFiltro)}".</div>`;
     return grupos.map(([titulo, lista, vazio]) => `<div class="mod-grupo">${titulo}<span>${lista.length}</span></div>`
       + (lista.length ? lista.map(m => `<div class="mod-item" data-modelo="${m.id}">
-          <button type="button" class="mod-usar" data-usar="${m.id}">Usar</button>
-          ${podeModelo() ? `<button type="button" class="mod-excluir" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>` : ''}
           <div class="mod-info"><div class="mod-nome">${esc(m.nome)}</div><div class="mod-det">${resumoModelo(m)}</div></div>
           ${m.oficial ? '<span class="menu-tag">oficial</span>' : ''}
+          <button type="button" class="mod-usar" data-usar="${m.id}">Usar</button>
+          ${podeModelo() ? `<button type="button" class="mod-excluir" data-excluir-modelo="${m.id}" title="Excluir modelo">×</button>` : ''}
         </div>`).join('') : `<div class="mod-vazio">${q ? 'Nenhum resultado neste grupo.' : vazio}</div>`)).join('');
   }
   // Modelos de projeto são mantidos por líderes e administradores
