@@ -216,7 +216,7 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
   display: grid; grid-template-columns: 440px 1fr;
   flex: 1; min-height: 0;
   /* foto de fundo proporcional cobrindo a área, centralizada (como papel de parede) */
-  background: url(../assets/fundo.webp) center center / cover no-repeat #cfd3cc;
+  background: url(../assets/fundo.jpg) center center / cover no-repeat #cfd3cc;
 }
 .painel-wrap {
   /* card de cristal flutuante: altura do conteúdo (até caber na tela) */
