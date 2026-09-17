@@ -120,7 +120,9 @@
     const listaDutos = listaTrechos(d => d.eletroduto ? esc(d.eletroduto) : '[Ø]');
     const listaQueda = listaTrechos(d => d.quedaPct ? fmt(d.quedaPct, 2) + ' %' + (d.quedaOk ? '' : ' (acima de 2 %)') : '[XX]');
     const algumaQuedaRuim = trechosDim.some(tr => !tr.d.quedaOk);
-    const infrasUsadas = Array.from(new Set(trechosDim.map(tr => tr.d.infra.chave)));
+    const infrasUsadas = Array.from(new Set(trechosDim.map(tr => tr.d.infra.familia)));
+    const metodosUsados = Array.from(new Set(trechosDim.map(tr => tr.d.infra.metodo)))
+      .map(m => `<strong>${m}</strong> (${window.Calc.INFRAS[m].desc})`).join(' · ') || '<strong>B1</strong>';
 
     // Lista para a demonstração de cálculo: um item por trecho físico
     // (o circuito da estação de recarga aparece uma vez, passando pelo kit quando houver)
@@ -155,7 +157,7 @@
     <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Disjuntor</th><th style="${TH8}">IDR</th><th style="${TH8}">DPS</th></tr></thead>
     <tbody>${linhasProt.map((l, i) => `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${l[0]}</td>${l.slice(2).map(v => `<td style="${TD8};color:${TX1}">${v}</td>`).join('')}</tr>`).join('\n    ')}</tbody>
   </table>`;
-    const passagemTxt = trechosCalc.map(tr => `Trecho ${tr.num}${tr.circuito ? ' (' + tr.d.id + ')' : ''}: ${tr.d.infra.rotulo.toLowerCase()}`).join(' · ');
+    const passagemTxt = trechosCalc.map(tr => `Trecho ${tr.num}${tr.circuito ? ' (' + tr.d.id + ')' : ''}: método ${tr.d.infra.metodo} (${tr.d.infra.desc})`).join(' · ');
     const ok = (b) => b ? '<span style="color:' + GREEN_D + '">✓</span>' : '<span style="color:#C0392B">✗</span>';
     const cartaoTrecho = (tr) => {
       const d = tr.d;
@@ -165,7 +167,7 @@
       const fq = d.fatorQueda && d.fatorQueda > 1.8 ? '2' : '√3';
       const L1 = `I = ${tr.circuito ? (d.Ib ? `P / V = ${fmt(d.P * 1000)} / ${d.lig.tri ? '(' + d.V + ' × √3)' : d.V} = ${fmt(d.Ib, 1)} A · disjuntor ${fmt(In)} A` : '[XX] A') : (d.origemI ? d.origemI + ' = ' : '') + (In ? fmt(In, In % 1 ? 1 : 0) + ' A' : '[XX] A')} · ${ligTxt} · L = ${d.L ? fmt(d.L) + ' m' : '[XX] m'}`;
       const L2 = d.secao
-        ? `Seção (${d.infra.rotulo.toLowerCase()}, método ${d.infra.metodo}): I<sub>z</sub>(${fmt(d.secao)} mm²) × F<sub>T</sub>${d.fA && d.fA < 1 ? ' × F<sub>A</sub>' : ''} = ${fmt(d.izTabela)} × ${fmt(d.fT, 2)}${d.fA && d.fA < 1 ? ' × ' + fmt(d.fA, 2) : ''} = ${fmt(d.izCorrigida, 1)} A ≥ ${In ? fmt(In, In % 1 ? 1 : 0) : '[XX]'} A → ${d.caboDesc}`
+        ? `Seção (método de referência ${d.infra.metodo}): I<sub>z</sub>(${fmt(d.secao)} mm²) × F<sub>T</sub>${d.fA && d.fA < 1 ? ' × F<sub>A</sub>' : ''} = ${fmt(d.izTabela)} × ${fmt(d.fT, 2)}${d.fA && d.fA < 1 ? ' × ' + fmt(d.fA, 2) : ''} = ${fmt(d.izCorrigida, 1)} A ≥ ${In ? fmt(In, In % 1 ? 1 : 0) : '[XX]'} A → ${d.caboDesc}`
         : 'Seção: aguardando corrente do trecho';
       const L3 = d.quedaPct
         ? `Queda de tensão: ΔV = (${fq} × 0,0224 × ${fmt(d.L)} × ${fmt(Iq, Iq % 1 ? 1 : 0)}) / (${fmt(d.secao)} × ${d.V}) × 100 = ${fmt(d.quedaPct, 2)} % ${d.quedaOk ? '≤' : '>'} 2 %`
@@ -181,14 +183,14 @@
       </div>`;
     };
     const tabelaConclusao = `<table style="width:100%;border-collapse:collapse;font-size:9.5px">
-    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Passagem</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (HEPR 1 kV)</th><th style="${TH8}">Terra</th><th style="${TH8}">Eletroduto</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
+    <thead><tr style="background:${INK};color:#fff"><th style="${TH8}">Trecho</th><th style="${TH8}">Método</th><th style="${TH8}">Corrente</th><th style="${TH8}">Cabo (HEPR 1 kV)</th><th style="${TH8}">Terra</th><th style="${TH8}">Eletroduto</th><th style="${TH8}">L</th><th style="${TH8}">ΔV</th><th style="${TH8}">Situação</th></tr></thead>
     <tbody>${trechosCalc.map((tr, i) => { const d = tr.d; const In = tr.circuito ? d.alvo : d.In;
       const motivos = [];
       if (d.secao && In && d.izCorrigida < In) motivos.push('capacidade de condução');
       if (!d.quedaOk) motivos.push('ΔV ' + fmt(d.quedaPct, 2) + ' %');
       if (d.taxaOcupacao > 40) motivos.push('ocupação ' + fmt(d.taxaOcupacao, 1) + ' % com ' + d.lig.nv + ' condutores');
       const okTudo = motivos.length === 0;
-      return `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${tr.titulo}</td><td style="${TD8};color:${TX1}">${d.infra.rotulo}</td><td style="${TD8};color:${TX1}">${In ? fmt(In, In % 1 ? 1 : 0) + ' A' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.caboDesc ? manual(d.caboDesc, d.secaoManual) : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secaoTerra ? fmt(d.secaoTerra) + ' mm²' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.eletroduto ? manual(esc(d.eletroduto), d.eletrodutoManual) : `<span style="color:${G2}">[Ø]</span>`}</td><td style="${TD8};color:${TX1}">${d.L ? fmt(d.L) + ' m' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}${d.quedaOk ? '' : ';color:#C0392B;font-weight:600'}">${d.quedaPct ? fmt(d.quedaPct, 2) + ' %' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secao && d.quedaPct ? (okTudo ? `<span style="color:${GREEN_D};font-weight:600">Atende</span>` : `<span style="color:#C0392B;font-weight:600">Reavaliar</span><br /><span style="font-size:8px;color:#8a2d26">${motivos.join(' · ')}</span>`) : `<span style="color:${G2}">Pendente</span>`}</td></tr>`; }).join('\n      ')}</tbody>
+      return `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${tr.titulo}</td><td style="${TD8};color:${TX1}">${d.infra.metodo}</td><td style="${TD8};color:${TX1}">${In ? fmt(In, In % 1 ? 1 : 0) + ' A' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.caboDesc ? manual(d.caboDesc, d.secaoManual) : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secaoTerra ? fmt(d.secaoTerra) + ' mm²' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.eletroduto ? manual(esc(d.eletroduto), d.eletrodutoManual) : `<span style="color:${G2}">[Ø]</span>`}</td><td style="${TD8};color:${TX1}">${d.L ? fmt(d.L) + ' m' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}${d.quedaOk ? '' : ';color:#C0392B;font-weight:600'}">${d.quedaPct ? fmt(d.quedaPct, 2) + ' %' : `<span style="color:${G2}">[XX]</span>`}</td><td style="${TD8};color:${TX1}">${d.secao && d.quedaPct ? (okTudo ? `<span style="color:${GREEN_D};font-weight:600">Atende</span>` : `<span style="color:#C0392B;font-weight:600">Reavaliar</span><br /><span style="font-size:8px;color:#8a2d26">${motivos.join(' · ')}</span>`) : `<span style="color:${G2}">Pendente</span>`}</td></tr>`; }).join('\n      ')}</tbody>
   </table>`;
     const temFotos = p.fotos && p.fotos.length;
 
@@ -506,7 +508,7 @@
   </table>
   ${h3('4.1 · Premissas adotadas')}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    ${prem('Condutores', `Cobre, isolação HEPR 90 °C para 1 kV, não propagante de chama. Tipo de linha elétrica conforme a forma de passagem de cada trecho (método <strong>D</strong> para eletroduto enterrado; <strong>B1</strong> para eletroduto embutido em alvenaria ou aparente), método de referência da tabela 36 da NBR 5410.`)}
+    ${prem('Condutores', `Cobre, isolação HEPR 90 °C para 1 kV, não propagante de chama. A capacidade de condução de corrente segue o <strong>método de referência</strong> adotado em cada trecho (tabela 33 da ABNT NBR 5410): ${metodosUsados}.`)}
     ${prem('Correções', `Fator de temperatura conforme tabela 40 (temperatura do solo, referência 20 °C, para trechos enterrados; temperatura ambiente, referência 30 °C, para os demais); fator de agrupamento conforme tabela 42, quando aplicável. O resultado corrigido é o valor comparado à corrente de projeto.`)}
     ${prem('Margem de projeto', 'Aplica-se uma margem de segurança sobre a corrente nominal no dimensionamento do dispositivo de proteção, que cobre o regime contínuo e a elevação de temperatura no quadro.')}
     ${prem('Recomendação do fabricante', 'Quando a especificação do fabricante do equipamento for mais restritiva que o resultado do cálculo, adota-se a seção do fabricante.')}
@@ -591,7 +593,7 @@
     out.push(`<div style="font-family:Montserrat,sans-serif">
   ${secHeader(NUM.eletrodutos, TIT.eletrodutos, 'eletrodutos')}
   ${emResumo(infrasUsadas.length > 1
-    ? 'Do quadro de energia até a estação de recarga, os cabos correm sempre protegidos em eletroduto, com a forma de passagem definida trecho a trecho (enterrada, embutida em alvenaria ou aparente). <strong>Nenhum fio fica exposto</strong> ao longo do percurso.'
+    ? 'Do quadro de energia até a estação de recarga, os cabos correm sempre protegidos, com o método de instalação definido trecho a trecho (enterrado, embutido em alvenaria ou aparente). <strong>Nenhum fio fica exposto</strong> ao longo do percurso.'
     : {
       solo: 'Do quadro de energia até a estação de recarga, os cabos correm sempre protegidos: enterrados em duto no trecho externo e dentro de eletroduto de aço na subida ao equipamento. <strong>Nenhum fio fica exposto</strong> ao longo do percurso.',
       alvenaria: 'Do quadro de energia até a estação de recarga, os cabos correm sempre protegidos, em eletrodutos embutidos na alvenaria. <strong>Nenhum fio fica exposto</strong> ao longo do percurso.',
@@ -622,7 +624,7 @@
       return linhas.map((l, i) => `<tr${i % 2 ? ` style="background:${BG2}"` : ''}><td style="${TD8};font-weight:600;color:${INK}">${l[0]}</td>${l.slice(1).map(cel).join('')}</tr>`).join('\n    ');
     })()}</tbody>
   </table>
-  ${h3('6.3 · Execução da infraestrutura <span style="color:' + G2 + ';letter-spacing:.06em">(' + infrasUsadas.map(k => window.Calc.INFRAS[k].rotulo.toLowerCase()).join(' · ') + ')</span>')}
+  ${h3('6.3 · Execução da infraestrutura <span style="color:' + G2 + ';letter-spacing:.06em">(' + infrasUsadas.map(k => ({ solo: 'enterrada', alvenaria: 'embutida', aparente: 'aparente' }[k] || k)).join(' · ') + ')</span>')}
   <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px">
     <thead><tr style="background:${INK};color:#fff"><th style="${TH};width:30%">Trecho</th><th style="${TH};width:32%">Solução</th><th style="${TH}">Requisitos de execução</th></tr></thead>
     <tbody>

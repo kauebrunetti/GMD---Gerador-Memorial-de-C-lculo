@@ -6,23 +6,74 @@
 
 // Capacidade de condução de corrente [A] — cobre, isolação EPR/HEPR 90 °C.
 // NBR 5410, tabela 37. Chave: seção mm² → [2 cond. carregados, 3 cond. carregados]
+// Capacidade de condução de corrente por método de referência da NBR 5410
+// (tabela 33), em ampères: [2 condutores carregados, 3 condutores carregados].
+// Cobre, isolação EPR/XLPE (90 °C) — tabelas 37 (A1 a D) e 39 (E, F e G).
+// Métodos F e G só são tabelados a partir de 25 mm².
 const CAPACIDADE = {
-  // Método D — eletroduto enterrado no solo
-  D: {
-    1.5: [26, 22], 2.5: [34, 29], 4: [44, 37], 6: [56, 46],
-    10: [73, 61], 16: [95, 79], 25: [121, 101], 35: [146, 122],
-    50: [173, 144], 70: [213, 178], 95: [252, 211], 120: [287, 240],
-    150: [324, 271], 185: [363, 304], 240: [419, 351],
+  // A1 — condutores isolados em eletroduto embutido em parede termicamente isolante
+  A1: {
+    1.5: [19, 17], 2.5: [26, 23], 4: [35, 31], 6: [45, 40],
+    10: [61, 54], 16: [81, 73], 25: [106, 95], 35: [131, 117],
+    50: [158, 141], 70: [200, 179], 95: [241, 216], 120: [278, 249],
+    150: [318, 285], 185: [362, 324], 240: [424, 380],
   },
-  // Método B1 — condutores em eletroduto embutido em alvenaria ou aparente
+  // A2 — cabo multipolar em eletroduto embutido em parede termicamente isolante
+  A2: {
+    1.5: [18, 16], 2.5: [25, 22], 4: [33, 29], 6: [42, 37],
+    10: [57, 51], 16: [76, 68], 25: [99, 89], 35: [121, 109],
+    50: [145, 130], 70: [183, 164], 95: [220, 197], 120: [253, 227],
+    150: [290, 259], 185: [329, 295], 240: [386, 346],
+  },
+  // B1 — condutores isolados em eletroduto sobre parede ou embutido em alvenaria
   B1: {
     1.5: [23, 20], 2.5: [31, 28], 4: [42, 37], 6: [54, 48],
     10: [75, 66], 16: [100, 88], 25: [133, 117], 35: [164, 144],
     50: [198, 175], 70: [253, 222], 95: [306, 269], 120: [354, 312],
     150: [402, 355], 185: [458, 405], 240: [538, 476],
   },
+  // B2 — cabo multipolar em eletroduto sobre parede ou embutido em alvenaria
+  B2: {
+    1.5: [22, 19], 2.5: [30, 26], 4: [40, 35], 6: [51, 44],
+    10: [69, 60], 16: [91, 80], 25: [119, 105], 35: [146, 128],
+    50: [175, 154], 70: [221, 194], 95: [265, 233], 120: [305, 268],
+    150: [334, 300], 185: [384, 340], 240: [459, 398],
+  },
+  // C — cabos sobre parede, teto ou bandeja não perfurada
+  C: {
+    1.5: [24, 22], 2.5: [33, 30], 4: [45, 40], 6: [58, 52],
+    10: [80, 71], 16: [107, 96], 25: [138, 119], 35: [171, 147],
+    50: [209, 179], 70: [269, 229], 95: [328, 278], 120: [382, 322],
+    150: [441, 371], 185: [506, 424], 240: [599, 500],
+  },
+  // D — cabo em eletroduto enterrado no solo
+  D: {
+    1.5: [26, 22], 2.5: [34, 29], 4: [44, 37], 6: [56, 46],
+    10: [73, 61], 16: [95, 79], 25: [121, 101], 35: [146, 122],
+    50: [173, 144], 70: [213, 178], 95: [252, 211], 120: [287, 240],
+    150: [324, 271], 185: [363, 304], 240: [419, 351],
+  },
+  // E — cabo multipolar ao ar livre (bandeja perfurada, suportes, leito)
+  E: {
+    1.5: [26, 23], 2.5: [36, 32], 4: [49, 42], 6: [63, 54],
+    10: [86, 75], 16: [115, 100], 25: [149, 127], 35: [185, 158],
+    50: [225, 192], 70: [289, 246], 95: [352, 298], 120: [410, 346],
+    150: [473, 399], 185: [542, 456], 240: [641, 538],
+  },
+  // F — cabos unipolares justapostos ao ar livre
+  F: {
+    25: [161, 141], 35: [200, 176], 50: [242, 216], 70: [310, 279],
+    95: [377, 342], 120: [437, 400], 150: [504, 464], 185: [575, 533],
+    240: [679, 634],
+  },
+  // G — cabos unipolares espaçados ao ar livre
+  G: {
+    25: [182, 161], 35: [226, 201], 50: [275, 246], 70: [353, 318],
+    95: [430, 389], 120: [500, 454], 150: [577, 527], 185: [661, 605],
+    240: [781, 719],
+  },
 };
-const SECOES = Object.keys(CAPACIDADE.D).map(Number).sort((a, b) => a - b);
+const SECOES = Object.keys(CAPACIDADE.B1).map(Number).sort((a, b) => a - b);
 
 // Fator de correção de temperatura — NBR 5410, tabela 40 (EPR/XLPE).
 const FATOR_TEMP = {
@@ -33,18 +84,62 @@ const FATOR_TEMP = {
 };
 
 // Tipos de infraestrutura (parâmetro do projeto)
+// Métodos de referência de instalação — NBR 5410, tabela 33.
+// "familia" indica como a obra é descrita no memorial (enterrada, embutida ou aparente).
 const INFRAS = {
-  solo: {
-    chave: 'solo', rotulo: 'Embutida no solo (enterrada)', metodo: 'D', fator: 'solo', tempRef: 20,
-    linha: 'D (condutores em eletroduto enterrado no solo)', desc: 'condutores em eletroduto enterrado no solo',
+  A1: {
+    chave: 'A1', metodo: 'A1', familia: 'alvenaria', fator: 'ar', tempRef: 30,
+    rotulo: 'A1 · condutores em eletroduto embutido em parede isolante',
+    linha: 'A1 (condutores isolados em eletroduto embutido em parede termicamente isolante)',
+    desc: 'condutores isolados em eletroduto embutido em parede termicamente isolante',
   },
-  alvenaria: {
-    chave: 'alvenaria', rotulo: 'Embutida em alvenaria', metodo: 'B1', fator: 'ar', tempRef: 30,
-    linha: 'B1 (condutores em eletroduto embutido em alvenaria)', desc: 'condutores em eletroduto embutido em alvenaria',
+  A2: {
+    chave: 'A2', metodo: 'A2', familia: 'alvenaria', fator: 'ar', tempRef: 30,
+    rotulo: 'A2 · cabo multipolar em eletroduto embutido em parede isolante',
+    linha: 'A2 (cabo multipolar em eletroduto embutido em parede termicamente isolante)',
+    desc: 'cabo multipolar em eletroduto embutido em parede termicamente isolante',
   },
-  aparente: {
-    chave: 'aparente', rotulo: 'Aparente', metodo: 'B1', fator: 'ar', tempRef: 30,
-    linha: 'B1 (condutores em eletroduto aparente)', desc: 'condutores em eletroduto aparente',
+  B1: {
+    chave: 'B1', metodo: 'B1', familia: 'alvenaria', fator: 'ar', tempRef: 30,
+    rotulo: 'B1 · condutores em eletroduto em alvenaria ou sobre parede',
+    linha: 'B1 (condutores isolados em eletroduto embutido em alvenaria ou sobre parede)',
+    desc: 'condutores isolados em eletroduto embutido em alvenaria ou aparente sobre parede',
+  },
+  B2: {
+    chave: 'B2', metodo: 'B2', familia: 'alvenaria', fator: 'ar', tempRef: 30,
+    rotulo: 'B2 · cabo multipolar em eletroduto em alvenaria ou sobre parede',
+    linha: 'B2 (cabo multipolar em eletroduto embutido em alvenaria ou sobre parede)',
+    desc: 'cabo multipolar em eletroduto embutido em alvenaria ou aparente sobre parede',
+  },
+  C: {
+    chave: 'C', metodo: 'C', familia: 'aparente', fator: 'ar', tempRef: 30,
+    rotulo: 'C · cabos sobre parede, teto ou bandeja não perfurada',
+    linha: 'C (cabos fixados sobre parede, teto ou em bandeja não perfurada)',
+    desc: 'cabos fixados diretamente sobre parede, teto ou em bandeja não perfurada',
+  },
+  D: {
+    chave: 'D', metodo: 'D', familia: 'solo', fator: 'solo', tempRef: 20,
+    rotulo: 'D · cabo em eletroduto enterrado no solo',
+    linha: 'D (cabo em eletroduto enterrado no solo)',
+    desc: 'cabo em eletroduto enterrado no solo',
+  },
+  E: {
+    chave: 'E', metodo: 'E', familia: 'aparente', fator: 'ar', tempRef: 30,
+    rotulo: 'E · cabo multipolar ao ar livre (leito, bandeja perfurada)',
+    linha: 'E (cabo multipolar ao ar livre, em leito, bandeja perfurada ou suportes)',
+    desc: 'cabo multipolar ao ar livre, em leito, bandeja perfurada ou suportes',
+  },
+  F: {
+    chave: 'F', metodo: 'F', familia: 'aparente', fator: 'ar', tempRef: 30,
+    rotulo: 'F · cabos unipolares justapostos ao ar livre',
+    linha: 'F (cabos unipolares justapostos ao ar livre)',
+    desc: 'cabos unipolares justapostos ao ar livre',
+  },
+  G: {
+    chave: 'G', metodo: 'G', familia: 'aparente', fator: 'ar', tempRef: 30,
+    rotulo: 'G · cabos unipolares espaçados ao ar livre',
+    linha: 'G (cabos unipolares espaçados ao ar livre)',
+    desc: 'cabos unipolares espaçados ao ar livre',
   },
 };
 
@@ -206,13 +301,14 @@ function calcularPonto(ponto, rede, infra, indice, fA) {
   const fT = fatorTemperatura(temp, infra.fator);
 
   // Seção mínima pela capacidade de condução: Iz·fT ≥ In (≥ Ib)
-  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.D;
+  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.B1;
   let secaoCapacidade = 0;
   const alvo = Math.max(disjuntor, Ib);
   const idxCap = lig.carregados >= 3 ? 1 : 0;
   if (alvo > 0) {
     for (const s of SECOES) {
       if (s < 2.5) continue; // seção mínima de força
+      if (!tabelaCap[s]) continue;
       if (tabelaCap[s][idxCap] * fT * fA >= alvo) { secaoCapacidade = s; break; }
     }
     if (!secaoCapacidade) secaoCapacidade = SECOES[SECOES.length - 1];
@@ -300,12 +396,13 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI) {
   const lig = LIG_TRECHO[ligKey] || LIG_TRECHO['3F+N+T'];
   const L = Number(t.L) || 0;
   const fT = fatorTemperatura(infra.tempRef, infra.fator);
-  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.D;
+  const tabelaCap = CAPACIDADE[infra.metodo] || CAPACIDADE.B1;
   const idx = lig.carregados >= 3 ? 1 : 0;
   let secaoCalc = 0;
   if (In > 0) {
     for (const s of SECOES) {
       if (s < 2.5) continue;
+      if (!tabelaCap[s]) continue;
       if (tabelaCap[s][idx] * fT >= In) { secaoCalc = s; break; }
     }
     if (!secaoCalc) secaoCalc = SECOES[SECOES.length - 1];
@@ -338,7 +435,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI) {
 // Cálculo global do projeto
 function calcularProjeto(p) {
   const rede = { tensao: p.tensao, config: p.config, ikPresumida: p.ikPresumida };
-  const infra = INFRAS[p.infra] || INFRAS.solo;
+  const infra = INFRAS[p.infra] || INFRAS.B1;
   // Forma de passagem: definida por trecho (padrão: infra do projeto)
   const infraDe = (obj) => (obj && INFRAS[obj.infra]) || infra;
   // Trecho 4 agrupado: todos os circuitos no mesmo eletroduto/eletrocalha →
@@ -446,7 +543,7 @@ function calcularProjeto(p) {
     }
   }
 
-  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, participacao, rede, infra, infraKey: (INFRAS[p.infra] ? p.infra : 'solo'), topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
+  return { pontos, totalKw, totalIb, correnteEntrada, entradaFormula, geral, participacao, rede, infra, infraKey: (INFRAS[p.infra] || INFRAS.B1).familia, topologia, alimentador, alimentadorCalc, alimentadorManual, qdQuantidade, qdGeral, qdGeralManual, clienteDisj, clienteDisjManual, trafo, trechos, trecho4, fA };
 }
 
 function num(v) {

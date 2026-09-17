@@ -10,7 +10,7 @@
 
   // ── Estado ─────────────────────────────────────────────────
   function novoCarregador() {
-    return { potencia: '', infra: 'solo', marca: '', modelo: '', conector: '', cabo: '', distancia: '', temperatura: '', incluirKit: false, secaoManual: '', disjuntorManual: '', idrManual: '', eletrodutoManual: '' };
+    return { potencia: '', infra: 'B1', marca: '', modelo: '', conector: '', cabo: '', distancia: '', temperatura: '', incluirKit: false, secaoManual: '', disjuntorManual: '', idrManual: '', eletrodutoManual: '' };
   }
   function novoProjeto() {
     return {
@@ -20,11 +20,11 @@
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
       tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim',
-      infra: 'solo', quadroDistribuicao: 'nao', qdQuantidade: '',
+      infra: 'B1', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
       trafoPrimV: '', trafoPrimLig: '', trafoSecV: '', trafoSecLig: '', trafoIp: '',
-      trechos: { t1: { I: '', L: '', secao: '', eletroduto: '', infra: 'solo' }, t2: { I: '', L: '', secao: '', eletroduto: '', infra: 'solo' }, t3: { I: '', L: '', secao: '', eletroduto: '', infra: 'solo' } },
+      trechos: { t1: { I: '', L: '', secao: '', eletroduto: '', infra: 'B1' }, t2: { I: '', L: '', secao: '', eletroduto: '', infra: 'B1' }, t3: { I: '', L: '', secao: '', eletroduto: '', infra: 'B1' } },
       analiseDemanda: 'nao', potenciaDisponivel: '', pontosSimultaneos: '',
       carregadores: [novoCarregador()],
       alterarPadrao: 'nao', artExecucao: '',
@@ -38,7 +38,12 @@
     // Configurações válidas: F+N+T · 2F+T · 2F+N+T · 3F+N+T, em 127, 220 ou 380 V
     if (p.config === '1F+N+T') p.config = 'F+N+T';
     if (Number(p.tensao) === 380 && p.config !== '3F+N+T') p.config = '3F+N+T';
-    if (!p.infra) p.infra = 'solo';
+    // Formas de passagem antigas passam a ser métodos de referência (NBR 5410, tabela 33)
+    const METODO_ANTIGO = { solo: 'D', alvenaria: 'B1', aparente: 'B1' };
+    if (METODO_ANTIGO[p.infra]) p.infra = METODO_ANTIGO[p.infra];
+    if (!p.infra) p.infra = 'B1';
+    (p.carregadores || []).forEach(cg => { if (METODO_ANTIGO[cg.infra]) cg.infra = METODO_ANTIGO[cg.infra]; });
+    ['t1', 't2', 't3'].forEach(k => { const tr = (p.trechos || {})[k]; if (tr && METODO_ANTIGO[tr.infra]) tr.infra = METODO_ANTIGO[tr.infra]; });
     if (!p.quadroDistribuicao) p.quadroDistribuicao = p.topologia === 'quadro' ? 'sim' : 'nao';
     if (p.qdCorrente === undefined) p.qdCorrente = '';
     if (p.qdQuantidade === undefined) p.qdQuantidade = '';
@@ -50,13 +55,13 @@
     ['trafoPrimV', 'trafoPrimLig', 'trafoSecV', 'trafoSecLig', 'trafoIp'].forEach(k => { if (p[k] === undefined) p[k] = ''; });
     if (!p.trechos) p.trechos = {};
     ['t1', 't2', 't3'].forEach(k => {
-      if (!p.trechos[k]) p.trechos[k] = { I: '', L: '', secao: '', eletroduto: '', infra: p.infra || 'solo' };
+      if (!p.trechos[k]) p.trechos[k] = { I: '', L: '', secao: '', eletroduto: '', infra: p.infra || 'B1' };
       if (p.trechos[k].I === undefined) p.trechos[k].I = '';
-      if (!p.trechos[k].infra) p.trechos[k].infra = p.infra || 'solo';
+      if (!p.trechos[k].infra) p.trechos[k].infra = p.infra || 'B1';
     });
     if (p.qdCorrente && !p.trechos.t1.I) p.trechos.t1.I = p.qdCorrente;
     if (p.trafoDisjuntor && !p.trechos.t2.I) p.trechos.t2.I = p.trafoDisjuntor;
-    (p.carregadores || []).forEach(cg => { if (!cg.infra) cg.infra = p.infra || 'solo'; if (cg.marca === undefined) cg.marca = ''; });
+    (p.carregadores || []).forEach(cg => { if (!cg.infra) cg.infra = p.infra || 'B1'; if (cg.marca === undefined) cg.marca = ''; });
     if (!p.analiseDemanda) p.analiseDemanda = (p.potenciaDisponivel || p.pontosSimultaneos) ? 'sim' : 'nao';
     if (p.artExecucao === undefined) p.artExecucao = '';
     if (!p.trecho4Modo) p.trecho4Modo = 'individual';
@@ -345,6 +350,85 @@
     const q = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     return `<select data-chave="${chave}">${opcoes.map(([val, lbl]) => `<option value="${q(val)}"${String(v) === String(val) ? ' selected' : ''}>${q(lbl)}</option>`).join('')}</select>`;
   }
+  // ── Seletor de modelo: catálogo à vista, com busca e digitação livre ──
+  function comboModeloHtml(i) {
+    return `<div class="combo" data-combo="${i}">
+      ${inp(`carregadores.${i}.modelo`).replace('<input ', '<input class="combo-input" autocomplete="off" placeholder="Escolha do catálogo ou escreva o modelo" ')}
+      <button type="button" class="combo-btn" tabindex="-1" aria-expanded="false" title="Ver catálogo de equipamentos">▾</button>
+      <div class="combo-lista" hidden></div>
+    </div>`;
+  }
+  const semAcento = (t) => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  let comboPos = -1; // item destacado pelo teclado
+  function comboItens(filtro) {
+    const q = semAcento(filtro).trim();
+    return catalogo.map((e, k) => ({ e, k }))
+      .filter(({ e }) => !q || semAcento(`${e.nome} ${e.marca || ''} ${e.potencia} ${e.conector || ''} ${e.tipo || ''}`).includes(q));
+  }
+  function comboFechar() {
+    $form.querySelectorAll('.combo').forEach(w => {
+      w.classList.remove('aberto');
+      const l = w.querySelector('.combo-lista'); if (l) l.hidden = true;
+      const b = w.querySelector('.combo-btn'); if (b) b.setAttribute('aria-expanded', 'false');
+    });
+    comboPos = -1;
+  }
+  function comboAbrir(i, filtro) {
+    const wrap = $form.querySelector(`.combo[data-combo="${i}"]`);
+    if (!wrap) return;
+    $form.querySelectorAll('.combo').forEach(w => { if (w !== wrap) { w.classList.remove('aberto'); w.querySelector('.combo-lista').hidden = true; } });
+    const lista = wrap.querySelector('.combo-lista');
+    const itens = comboItens(filtro);
+    const grupos = [['AC', 'Carregadores AC'], ['DC', 'Estações DC']];
+    let html = '';
+    let pos = 0;
+    grupos.forEach(([tipo, titulo]) => {
+      const g = itens.filter(({ e }) => (e.tipo || 'AC') === tipo);
+      if (!g.length) return;
+      html += `<div class="combo-grupo">${titulo}</div>`;
+      html += g.map(({ e, k }) => `<div class="combo-item" data-k="${k}" data-pos="${pos++}"><span class="nome">${esc(e.nome)}</span><span class="det">${fmt(e.potencia)} kW · ${esc(e.conector || '—')}${e.marca ? ' · ' + esc(e.marca) : ''}</span></div>`).join('');
+    });
+    if (!pos) html = '<div class="combo-vazio">Nenhum equipamento do catálogo com esse texto. Pode escrever o modelo livremente.</div>';
+    else html += '<div class="combo-rodape">Não está na lista? Escreva o modelo no campo. Novos equipamentos entram em Novo ▾ → Catálogo.</div>';
+    lista.innerHTML = html;
+    lista.hidden = false;
+    wrap.classList.add('aberto');
+    const btn = wrap.querySelector('.combo-btn'); if (btn) btn.setAttribute('aria-expanded', 'true');
+    // abre para cima só quando falta espaço abaixo e sobra acima
+    const painel = document.getElementById('painel-form');
+    const r = wrap.getBoundingClientRect();
+    const rp = painel.getBoundingClientRect();
+    const abaixo = rp.bottom - r.bottom;
+    const acima = r.top - rp.top;
+    wrap.classList.toggle('acima', abaixo < 190 && acima > abaixo);
+    comboPos = -1;
+  }
+  function comboDestacar(delta) {
+    const lista = $form.querySelector('.combo.aberto .combo-lista');
+    if (!lista) return;
+    const itens = Array.from(lista.querySelectorAll('.combo-item'));
+    if (!itens.length) return;
+    comboPos = (comboPos + delta + itens.length + 1) % (itens.length + 1) - (delta > 0 ? 0 : 0);
+    if (comboPos < 0) comboPos = itens.length - 1;
+    if (comboPos >= itens.length) comboPos = 0;
+    itens.forEach((el, k) => el.classList.toggle('ativo', k === comboPos));
+    const alvo = itens[comboPos];
+    if (alvo) alvo.scrollIntoView({ block: 'nearest' });
+  }
+  function comboAplicar(i, k) {
+    const eq = catalogo[k];
+    const cg = projeto.carregadores[i];
+    if (!eq || !cg) return;
+    cg.modelo = eq.nome;
+    cg.potencia = String(eq.potencia);
+    cg.conector = eq.conector || cg.conector;
+    if (eq.marca) cg.marca = eq.marca;
+    comboFechar();
+    salvar(); renderTudo();
+    const el = $form.querySelector(`.combo[data-combo="${i}"] .combo-input`);
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+
   // Características da carga em texto corrido: marca, modelo, tensão, corrente, potência e FP
   function caracteristicasHtml(cg, pt) {
     const falta = (t) => `<span class="falta">${t}</span>`;
@@ -378,7 +462,7 @@
         <div class="grid3">
           ${campoAv('Corrente (A)', inp(chaveI, { type: 'number', step: '1' }))}
           ${campo('Distância (m)', inp(chaveL, { type: 'number', step: '1' }))}
-          ${campoAv('Forma de passagem', sel(chaveInfra, opcoesInfra))}
+          ${campoAv('Método de referência (NBR 5410)', sel(chaveInfra, opcoesInfra))}
           ${campoAv('Seção do cabo (mm²)', inp(chaveS, { type: 'number', step: '0.5' }))}
           ${chaveE ? campoAv('Eletroduto', sel(chaveE, opcoesEletroduto)) : ''}
         </div>
@@ -399,7 +483,7 @@
           <span>${i === 0 && multi ? `<button type="button" class="btn-mini" id="aplicar-restante" title="Copia modelo, potência, conector, distância, forma de passagem e kit deste ponto para todos os outros">aplicar ao restante</button> ` : ''}${multi && !quadroSim ? `<button type="button" class="btn-mini rm-ponto" data-i="${i}">remover</button>` : ''}</span></div>
         <div class="grid2">
           ${campo('Marca', inp(`carregadores.${i}.marca`).replace('<input ', '<input list="lista-marcas" autocomplete="off" '))}
-          ${campo('Modelo', inp(`carregadores.${i}.modelo`).replace('<input ', '<input list="lista-catalogo" autocomplete="off" '))}
+          ${campo('Modelo', comboModeloHtml(i))}
         </div>
         <div class="grid3">
           ${campo('Potência (kW)', sel(`carregadores.${i}.potencia`, [['', '—']].concat(window.Calc.POTENCIAS.map(p => [p, fmt(p) + ' kW']))))}
@@ -430,7 +514,7 @@
           <div class="grid3">
             ${campoAv('Corrente (A)', inp(`carregadores.${i}.disjuntorManual`, { type: 'number', step: '1' }))}
             ${campo('Distância (m)', inp(`carregadores.${i}.distancia`, { type: 'number', step: '1' }))}
-            ${campoAv('Forma de passagem', sel(`carregadores.${i}.infra`, opcoesInfra))}
+            ${campoAv('Método de referência (NBR 5410)', sel(`carregadores.${i}.infra`, opcoesInfra))}
             ${campoAv('Seção do cabo (mm²)', inp(`carregadores.${i}.secaoManual`, { type: 'number', step: '0.5' }))}
             ${agrupado ? '' : campoAv('Eletroduto', sel(`carregadores.${i}.eletrodutoManual`, opcoesEletroduto))}
           </div>
@@ -631,20 +715,7 @@
       aplicarValor(chave, e.target.value);
       if (chave === 'cliente' || chave === 'docNum') atualizarProjetoAtual();
       if (chave === 'cliente') preencherCliente(e.target.value);
-      const mMod = /^carregadores\.(\d+)\.modelo$/.exec(chave);
-      if (mMod) {
-        const eq = catalogo.find(x => String(x.nome).trim().toLowerCase() === String(e.target.value).trim().toLowerCase());
-        const cg = projeto.carregadores[Number(mMod[1])];
-        if (eq && cg) {
-          cg.potencia = String(eq.potencia);
-          cg.conector = eq.conector || cg.conector;
-          if (eq.marca) cg.marca = eq.marca;
-          salvar(); renderTudo();
-          const el = $form.querySelector(`[data-chave="${chave}"]`);
-          if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
-          return;
-        }
-      }
+      if (e.target.classList.contains('combo-input')) comboAbrir(e.target.closest('.combo').dataset.combo, e.target.value);
       if (/^carregadores\.\d+\.disjuntorManual$/.test(chave)) {
         $form.querySelectorAll(`[data-chave="${chave}"]`).forEach(el => { if (el !== e.target) el.value = e.target.value; });
       }
@@ -733,6 +804,46 @@
     });
   }
 
+  $form.addEventListener('mousedown', (e) => {
+    const btn = e.target.closest('.combo-btn');
+    if (btn) {
+      e.preventDefault();
+      const wrap = btn.closest('.combo');
+      const i = wrap.dataset.combo;
+      if (wrap.classList.contains('aberto')) comboFechar();
+      else { comboAbrir(i, ''); wrap.querySelector('.combo-input').focus(); }
+      return;
+    }
+    const item = e.target.closest('.combo-item');
+    if (item) {
+      e.preventDefault();
+      comboAplicar(Number(item.closest('.combo').dataset.combo), Number(item.dataset.k));
+      return;
+    }
+    if (!e.target.closest('.combo')) comboFechar();
+  });
+  $form.addEventListener('focusin', (e) => {
+    if (e.target.classList.contains('combo-input')) comboAbrir(e.target.closest('.combo').dataset.combo, '');
+    else if (!e.target.closest('.combo')) comboFechar();
+  });
+  $form.addEventListener('keydown', (e) => {
+    if (!e.target.classList.contains('combo-input')) return;
+    const wrap = e.target.closest('.combo');
+    const aberto = wrap.classList.contains('aberto');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!aberto) { comboAbrir(wrap.dataset.combo, e.target.value); return; }
+      comboDestacar(e.key === 'ArrowDown' ? 1 : -1);
+    } else if (e.key === 'Enter') {
+      const ativo = wrap.querySelector('.combo-item.ativo');
+      if (aberto && ativo) { e.preventDefault(); comboAplicar(Number(wrap.dataset.combo), Number(ativo.dataset.k)); }
+      else comboFechar();
+    } else if (e.key === 'Escape') {
+      if (aberto) { e.stopPropagation(); comboFechar(); }
+    } else if (e.key === 'Tab') comboFechar();
+  });
+  document.addEventListener('mousedown', (e) => { if (!e.target.closest('.combo')) comboFechar(); });
+
   $form.addEventListener('click', (e) => {
     if (e.target.id === 'add-ponto') {
       projeto.carregadores.push(novoCarregador());
@@ -816,9 +927,7 @@
   // ── Cadastro de clientes (reaproveita endereço e cidade) ──
   // Sugestões do catálogo (modelo) e das marcas já usadas
   function renderListaCatalogo() {
-    const dlC = document.getElementById('lista-catalogo');
     const dlM = document.getElementById('lista-marcas');
-    if (dlC) dlC.innerHTML = catalogo.map(e => `<option value="${esc(e.nome)}"></option>`).join('');
     if (dlM) {
       const marcas = new Set();
       catalogo.forEach(e => { if ((e.marca || '').trim()) marcas.add(e.marca.trim()); });
@@ -1160,12 +1269,12 @@
   }
   async function criarModelosOficiais() {
     const lista = [
-      modeloOficial('Residencial · 1 × 7,4 kW · 220 V 2F+N+T · sem QDA', 1, { n: 1, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
-      modeloOficial('Condomínio · 2 × 7,4 kW · 220 V 2F+N+T · QDA', 2, { n: 2, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
-      modeloOficial('Condomínio · 4 × 7,4 kW · 220 V 2F+N+T · QDA · circuitos agrupados', 3, { n: 4, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', trecho4Modo: 'agrupado', trecho4Duto: 'eletrocalha' } }),
-      modeloOficial('Condomínio · 2 × 22 kW · 380 V 3F+N+T · QDA', 4, { n: 2, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'alvenaria', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 380, config: '3F+N+T' } }),
-      modeloOficial('Empresa · 1 × 22 kW · 220 V com transformador 220/380 V', 5, { n: 1, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'aparente', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', transformador: 'sim', quadroDistribuicao: 'sim', qdQuantidade: '1', trafoPrimV: '220', trafoPrimLig: '2F+T', trafoSecV: '380', trafoSecLig: '3F+N+T', trafoIp: 'IP21' } }),
-      modeloOficial('Frota · 1 × 60 kW DC · 380 V 3F+N+T · QDA', 6, { n: 1, carregador: { potencia: '60', conector: 'CCS 2', infra: 'solo', modelo: 'Estação DC 60 kW · CCS 2' }, projeto: { tensao: 380, config: '3F+N+T', quadroDistribuicao: 'sim', qdQuantidade: '1' } }),
+      modeloOficial('Residencial · 1 × 7,4 kW · 220 V 2F+N+T · sem QDA', 1, { n: 1, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
+      modeloOficial('Condomínio · 2 × 7,4 kW · 220 V 2F+N+T · QDA', 2, { n: 2, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T' } }),
+      modeloOficial('Condomínio · 4 × 7,4 kW · 220 V 2F+N+T · QDA · circuitos agrupados', 3, { n: 4, carregador: { potencia: '7.4', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 7,4 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', trecho4Modo: 'agrupado', trecho4Duto: 'eletrocalha' } }),
+      modeloOficial('Condomínio · 2 × 22 kW · 380 V 3F+N+T · QDA', 4, { n: 2, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 380, config: '3F+N+T' } }),
+      modeloOficial('Empresa · 1 × 22 kW · 220 V com transformador 220/380 V', 5, { n: 1, carregador: { potencia: '22', conector: 'Tipo 2', infra: 'B1', modelo: 'Wallbox AC 22 kW · Tipo 2' }, projeto: { tensao: 220, config: '2F+N+T', transformador: 'sim', quadroDistribuicao: 'sim', qdQuantidade: '1', trafoPrimV: '220', trafoPrimLig: '2F+T', trafoSecV: '380', trafoSecLig: '3F+N+T', trafoIp: 'IP21' } }),
+      modeloOficial('Frota · 1 × 60 kW DC · 380 V 3F+N+T · QDA', 6, { n: 1, carregador: { potencia: '60', conector: 'CCS 2', infra: 'D', modelo: 'Estação DC 60 kW · CCS 2' }, projeto: { tensao: 380, config: '3F+N+T', quadroDistribuicao: 'sim', qdQuantidade: '1' } }),
     ];
     for (const m of lista) {
       try { await window.Sync.salvarModelo({ id: m.id, nome: m.nome, dados: m.dados, oficial: true, ordem: m.ordem, gestor: 'BeGreen' }); } catch (e) { nuvemOk(false, e); return; }
