@@ -265,6 +265,8 @@ const IDRS = [25, 40, 63, 80, 100, 125];
 // DPS padrão BeGreen: sempre 1P 275 V, um por condutor vivo (qualquer tensão)
 const DPS_TENSAO = { 127: 275, 220: 275, 380: 275, 440: 275 };
 const DPS_KA = 45; // padrão BeGreen: 45 kA Classe II
+// Correntes de descarga usuais (kA): kits Clamper trazem DPS de 20 kA
+const DPS_KAS = [12.5, 20, 30, 40, 45, 60, 65, 80];
 
 // Potências comerciais de estação de recarga [kW]
 const POTENCIAS = [3.7, 7.4, 11, 22, 30, 40, 50, 60, 80, 90, 100, 120, 150, 180, 240, 360];
@@ -447,7 +449,7 @@ function calcularPonto(ponto, rede, infra, indice, fA, cabo, temps, quedaMax) {
 
   // DPS — padrão fixo: 45 kA Classe II, tensão pela alimentação do ponto
   const dpsTensao = 275;
-  const dpsKa = DPS_KA;
+  const dpsKa = Number(rede.dpsKa) > 0 ? Number(rede.dpsKa) : DPS_KA;
 
   const id = 'C-EV-' + String(indice + 1).padStart(2, '0');
   const tipo = P > AC_LIMITE_KW ? 'DC' : 'AC';
@@ -532,7 +534,7 @@ function dimensionarTrecho(t, In, V, ligKey, infra, origemI, cabo, temps, quedaM
 
 // Cálculo global do projeto
 function calcularProjeto(p) {
-  const rede = { tensao: p.tensao, config: p.config, ikPresumida: p.ikPresumida };
+  const rede = { tensao: p.tensao, config: p.config, ikPresumida: p.ikPresumida, dpsKa: num(p.dpsKa) };
   const infra = INFRAS[p.infra] || INFRAS.B1;
   const cabo = caboDe(p.cabo1kv || p.classeCabo);
   const temps = { ambiente: num(p.tempAmbiente), solo: num(p.tempSolo) };
@@ -662,6 +664,6 @@ function fmt(n, casas) {
 
 window.Calc = {
   calcularProjeto, calcularPonto, fmt, num, ligacaoPonto, descCabo, terraSecao,
-  ELETRODUTOS, ELETROCALHAS, SECOES, DIAMETRO_EXTERNO, DPS_TENSAO, POTENCIAS, INFRAS,
+  ELETRODUTOS, ELETROCALHAS, SECOES, DIAMETRO_EXTERNO, DPS_TENSAO, DPS_KA, DPS_KAS, POTENCIAS, INFRAS,
   KIT_OBRIGATORIO_KW, KIT_LIMITE_KW, TRIFASICO_KW, AC_LIMITE_KW, CONECTORES, FP, CABOS, QUEDA_MAX,
 };

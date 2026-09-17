@@ -19,7 +19,7 @@
       atualizadoEm: new Date().toISOString(),
       cliente: '', endereco: '', cidadeUf: '', docNum: proximoDocNum(),
       revisao: '00', dataRevisao: hoje(), descricaoRevisao: 'Emissão inicial', historicoRevisoes: [],
-      tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim',
+      tensao: 220, config: '2F+N+T', disjuntorGeral: '', ikPresumida: '', aterramento: 'TN-S', aterramentoExistente: 'sim', internetCliente: 'sim', dpsKa: '45',
       infra: 'B1', classeCabo: '1kV', tempAmbiente: '30', tempSolo: '20', quedaMax: '4', quadroDistribuicao: 'nao', qdQuantidade: '',
       trecho4Modo: 'individual', trecho4Duto: 'eletroduto', trecho4Tamanho: '',
       transformador: 'nao', trafoPotencia: '',
@@ -71,6 +71,7 @@
     if (!p.trecho4Modo) p.trecho4Modo = 'individual';
     if (!p.aterramentoExistente) p.aterramentoExistente = 'sim';
     if (!p.internetCliente) p.internetCliente = 'sim';
+    if (!(Number(p.dpsKa) > 0)) p.dpsKa = String(window.Calc.DPS_KA);
     if (!['TN-S', 'TT'].includes(p.aterramento)) p.aterramento = p.aterramentoExistente === 'nao' ? 'TT' : 'TN-S';
     if (!p.trecho4Duto) p.trecho4Duto = 'eletroduto';
     if (p.trecho4Tamanho === undefined) p.trecho4Tamanho = '';
@@ -602,6 +603,7 @@
     <details data-sec="5"><summary>5 · Estações de recarga e circuitos</summary><div class="sec-body">
       ${cartoes}
       ${quadroSim ? '' : '<button type="button" class="btn-sec" id="add-ponto">+ adicionar ponto de recarga</button>'}
+      ${campo('Corrente de descarga do DPS (kA)', sel('dpsKa', window.Calc.DPS_KAS.map(k => [String(k), fmt(k) + ' kA' + (k === window.Calc.DPS_KA ? ' · padrão BeGreen' : (k === 20 ? ' · kit Clamper' : ''))])))}
       ${campo('Conexão das estações', sel('internetCliente', [['sim', 'Ponto de internet do cliente (Wi-Fi ou cabo)'], ['nao', 'Não se aplica (4G próprio ou sem conexão)']]))}
     </div></details>
     <details data-sec="6"><summary>6 · Trechos e dimensionamento</summary><div class="sec-body">
