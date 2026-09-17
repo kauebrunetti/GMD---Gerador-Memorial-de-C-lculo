@@ -253,8 +253,8 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
 
 /* ── Formulário: cards de vidro (Liquid Glass) ─────────────── */
 .vidro, details, .btn-recolher {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .52), rgba(255, 255, 255, .34));
-  border: 1px solid rgba(255, 255, 255, .85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .84), rgba(255, 255, 255, .72));
+  border: 1px solid rgba(255, 255, 255, .95);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .95),
     0 1px 2px rgba(27, 28, 27, .05),
@@ -293,7 +293,7 @@ details.mais::after {
 .sec-body::-webkit-scrollbar, details::-webkit-scrollbar { display: none; }
 
 /* ── Assistente por etapas: barra de progresso e navegação ─── */
-.etapas { margin: 2px 2px 12px; }
+.etapas { margin: 2px 2px 12px; flex: none; }
 .etapas-barra { display: flex; gap: 4px; }
 .etapa-pt {
   flex: 1; height: 6px; border-radius: 3px; border: 0; padding: 0; cursor: pointer;
@@ -309,16 +309,16 @@ details.mais::after {
   font-family: Oswald, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
 }
 .etapas-pend { color: var(--ink); }
-.etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; margin-top: auto; }
+.etapas-nav { display: flex; gap: 10px; padding: 10px 0 0; margin-top: auto; flex: none; }
 .etapa-btn {
   flex: 1; font-family: Oswald, sans-serif; font-size: 11px; font-weight: 500;
   letter-spacing: .12em; text-transform: uppercase; padding: 12px; border-radius: 12px; cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, .95); color: var(--g1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66));
-  box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(27, 28, 27, .08);
+  border: 1px solid rgba(255, 255, 255, .95); color: var(--tx1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .84));
+  box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(27, 28, 27, .12);
 }
 .etapa-btn:hover { color: var(--ink); }
-.etapa-btn:disabled { opacity: .4; cursor: default; }
+.etapa-btn:disabled { opacity: .55; cursor: default; }
 .etapa-btn.pri {
   color: #fff; border-color: transparent;
   background: linear-gradient(180deg, var(--green), var(--green-d));
