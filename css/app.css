@@ -231,13 +231,13 @@ body.sem-sessao .topbar, body.sem-sessao #status, body.sem-sessao .main { filter
   /* vidro transparente: pouco leite, desfoque médio, brilho só nas bordas */
   -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
   background:
-    linear-gradient(118deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .08) 24%, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, .02) 66%, rgba(255, 255, 255, .22) 100%),
-    rgba(255, 255, 255, .16);
+    linear-gradient(118deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .04) 24%, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0) 66%, rgba(255, 255, 255, .12) 100%),
+    rgba(255, 255, 255, .06);
   border: 1px solid rgba(255, 255, 255, .7);
   /* borda-luz e "lente": claro em cima/esquerda, sombra fina embaixo/direita */
   box-shadow:
     inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .5),
-    inset 0 0 0 1px rgba(255, 255, 255, .45), inset 0 0 34px rgba(255, 255, 255, .45),
+    inset 0 0 0 1px rgba(255, 255, 255, .45), inset 0 0 34px rgba(255, 255, 255, .22),
     inset 3px 3px 10px rgba(255, 255, 255, .85), inset -3px -3px 10px rgba(27, 28, 27, .10),
     inset 0 -18px 28px -22px rgba(27, 28, 27, .28), inset 0 22px 28px -24px rgba(255, 255, 255, 1);
 }
